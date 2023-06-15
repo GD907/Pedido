@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\ProductoResource\Pages;
-use App\Filament\Resources\ProductoResource\RelationManagers;
-use App\Models\Producto;
+use App\Filament\Resources\ClienteResource\Pages;
+use App\Filament\Resources\ClienteResource\RelationManagers;
+use App\Models\Cliente;
 use Filament\Forms;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
@@ -13,11 +13,11 @@ use Filament\Tables;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\Card;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Columns\TextColumn;
-class ProductoResource extends Resource
+
+class ClienteResource extends Resource
 {
-    protected static ?string $model = Producto::class;
+    protected static ?string $model = Cliente::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
 
@@ -27,22 +27,31 @@ class ProductoResource extends Resource
             ->schema([
                 Card::make()
                     ->schema([
-                        Forms\Components\TextInput::make('codigo')
+                        Forms\Components\TextInput::make('nombre_comercio')
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('nombre')
                             ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('descripción')
+                        Forms\Components\TextInput::make('apellido')
+                            ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('proveedor')
+                        Forms\Components\TextInput::make('direccion')
+                            ->required()
                             ->maxLength(255),
-                        Forms\Components\TextInput::make('precio')
-                            ->required(),
-                        Forms\Components\TextInput::make('stock'),
-                        Forms\Components\TextInput::make('unidades_caja'),
-                        Forms\Components\Select::make('categoria_productos_id')
-                            ->required()->relationship('categoria_productos', 'nombre'),
+                        Forms\Components\TextInput::make('barrio')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('ciudad')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('telefono')
+                            ->tel()
+                            ->required()
+                            ->maxLength(20),
+                        Forms\Components\TextInput::make('correo')
+
+                            ->maxLength(255),
                     ])
             ]);
     }
@@ -51,16 +60,14 @@ class ProductoResource extends Resource
     {
         return $table
             ->columns([
-
-                Tables\Columns\TextColumn::make('codigo')->sortable()->searchable(),
+                Tables\Columns\TextColumn::make('nombre_comercio')->sortable()->searchable()->label('Nombre Comercial'),
                 Tables\Columns\TextColumn::make('nombre')->sortable()->searchable(),
-               Tables\Columns\TextColumn::make('precio'),
-               Tables\Columns\TextColumn::make('stock'),
-               Tables\Columns\TextColumn::make('categoria_productos.nombre')->label('Categoria'),
+               Tables\Columns\TextColumn::make('apellido'),
+               Tables\Columns\TextColumn::make('direccion'),
+               Tables\Columns\TextColumn::make('telefono'),
                 TextColumn::make('created_at')->dateTime()->label('Creado')
             ])
             ->filters([
-                SelectFilter::make('categoria_productos')->relationship('categoria_productos', 'nombre'),
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
@@ -84,10 +91,10 @@ class ProductoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProductos::route('/'),
-            'create' => Pages\CreateProducto::route('/create'),
-            'view' => Pages\ViewProducto::route('/{record}'),
-            'edit' => Pages\EditProducto::route('/{record}/edit'),
+            'index' => Pages\ListClientes::route('/'),
+            'create' => Pages\CreateCliente::route('/create'),
+            'view' => Pages\ViewCliente::route('/{record}'),
+            'edit' => Pages\EditCliente::route('/{record}/edit'),
         ];
     }
 
