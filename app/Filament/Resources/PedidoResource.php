@@ -18,6 +18,7 @@ use App\Models\Producto;
 use Filament\Forms\Components\Select;
 // Section
 use Filament\Forms\Components\Section;
+use Icetalker\FilamentStepper\Forms\Components\Stepper;
 
 use Filament\Forms\Components\Repeater;
 class PedidoResource extends Resource
@@ -69,17 +70,22 @@ class PedidoResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->reactive()
-                                    ->afterStateUpdated(fn ($state, callable $set) => $set('precio', Producto::find($state)?->precio ?? 0))
-
+                                    ->afterStateUpdated(function ($state, callable $set,callable $get) {
+                                        $set('precio', Producto::find($state)?->precio ?? 0);
+                                        $set('subtotal', $state * $get('precio'));
+                                    })
                                     ->columnSpan([
-                                        'md' => 5,
+                                        'md' => 4,
                                     ]),
 
-                                Forms\Components\TextInput::make('cantidad')
-                                    ->numeric()
+                                    Stepper::make('cantidad')
+                                    ->minValue(0)
+                                    ->maxValue(5)
                                     ->default(1)
                                     ->reactive()
-                                    ->afterStateUpdated(fn ($state, callable $set, callable $get) => $set('subtotal', $state * $get('precio')))
+                                    ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
+                                    $set('subtotal', $state * $get('precio'),
+                                    ))
                                     ->columnSpan([
                                         'md' => 2,
                                     ])
@@ -89,21 +95,25 @@ class PedidoResource extends Resource
                                     ->disabled()
                                     ->numeric()
                                     ->required()
-                                    ->reactive()
-                                    ->afterStateUpdated(fn ($state, callable $set) => $set('subtotal', Producto::find($state)?->precio ?? 0))
                                     ->columnSpan([
-                                        'md' => 3,
+                                        'md' => 2,
                                     ]),
                                     Forms\Components\TextInput::make('subtotal')
                                     ->label('Subtotal')
                                     ->disabled()
-                                    ->reactive()
                                     ->numeric()
                                     ->required()
                                     ->columnSpan([
-                                        'md' => 3,
+                                        'md' => 2,
                                     ]),
                             ])
+                            // ->afterStateUpdated(function ($state, callable $set) {
+                            //     $total_venta = 0;
+                            //     foreach ($this->state('productos') as $producto) {
+                            //         $total_venta += $producto['subtotal'];
+                            //     }
+                            //     $this->state(['total_venta' => $total_venta]);
+                            // })
                             ->orderable()
                             ->defaultItems(1)
                             ->disableLabel()

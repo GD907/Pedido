@@ -11,6 +11,7 @@
         "bezhansalleh/filament-shield": "^2.4",
         "filament/filament": "^2.0",
         "guzzlehttp/guzzle": "^7.2",
+        "icetalker/filament-stepper": "^1.0",
         "laravel/framework": "^10.10",
         "laravel/jetstream": "^3.2",
         "laravel/sanctum": "^3.2",
