@@ -16,12 +16,13 @@ return new class extends Migration
             $table->dateTime('fecha');
             $table->string('numero_factura');
             $table->string('observacion')->nullable();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('cliente_id');
+            $table->unsignedBigInteger('users_id');
+            $table->unsignedBigInteger('clientes_id');
             $table->unsignedBigInteger('estado_pedidos_id');
             $table->decimal('total_venta', 8, 2);
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('users_id')->references('id')->on('users');
             $table->foreign('estado_pedidos_id')->references('id')->on('estado_pedidos');
+            $table->foreign('clientes_id')->references('id')->on('clientes');
             $table->softDeletes();
             $table->timestamps();
         });

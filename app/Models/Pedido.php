@@ -10,7 +10,7 @@ class Pedido extends Model
 {
     use HasFactory, SoftDeletes;
     protected $table = 'pedidos';
-    protected $fillable = ['fecha', 'numero_factura', 'observacion', 'user_id', 'cliente_id', 'estado_pedidos_id', 'total_venta'];
+    protected $fillable = ['fecha', 'numero_factura', 'observacion', 'users_id', 'clientes_id', 'estado_pedidos_id', 'total_venta'];
     public function users()
     {
         // Una venta fue realizado por un usuario

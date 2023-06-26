@@ -21,6 +21,7 @@ use Filament\Forms\Components\Section;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
 
 use Filament\Forms\Components\Repeater;
+
 class PedidoResource extends Resource
 {
     protected static ?string $model = Pedido::class;
@@ -33,44 +34,56 @@ class PedidoResource extends Resource
             ->schema([
 
                 Card::make()
-                ->schema([
-                    Forms\Components\Hidden::make('user_id')
-                    ->default(fn () => auth()->user()->id),
-                    Forms\Components\Select::make('cliente_id')
-                    ->label('Cliente')
-                        ->required()->options(Cliente::all()
-                        ->pluck('nombre', 'id'))
-                        ->preload()
-                        ->searchable(),
+                    ->schema([
+                        Forms\Components\Hidden::make('users_id')
+                            ->default(fn () => auth()->user()->id),
+
                         Forms\Components\TextInput::make('numero_factura')
-                        ->disabled()
-                        ->default('OR-' . random_int(100000, 999999)),
-                        Forms\Components\TextInput::make('observacion')
-                            ->maxLength(255),
-                    Forms\Components\DateTimePicker::make('fecha')
-                        ->default(fn () => now())->disabled(),
+                            ->disabled()
+                            ->default('OR-' . random_int(100000, 999999)),
+
+                        Forms\Components\DateTimePicker::make('fecha')
+                            ->default(fn () => now())->disabled(),
                         Forms\Components\Select::make('estado_pedidos_id')
-                        ->relationship('estado_pedidos', 'nombre')->default('pendiente')->default(1)
-                        ->label('Estado'),
-                    Forms\Components\TextInput::make('total_venta')//Quiero guaradar en este la suma de todas las ventas
-                        ->reactive(),
-                ]),
+                            ->relationship('estado_pedidos', 'nombre')->default('pendiente')->default(1)
+                            ->label('Estado'),
+                        Forms\Components\Select::make('clientes_id')
+                            ->label('Cliente')
+                            ->required()->options(Cliente::all()
+                                ->pluck('nombre', 'id'))
+                            ->preload()
+                            ->columnSpan([
+                                'md' => 3,
+                            ])
+                            ->searchable(),
+
+
+                        Forms\Components\TextInput::make('observacion')
+                            ->maxLength(255)
+                            ->columnSpan([
+                                'md' => 3,
+                            ]),
+                        Forms\Components\TextInput::make('total_venta') //Quiero guardar en este la suma de todas las ventas
+                            ->reactive()
+                            ->default(0),
+                    ]),
 
                 Section::make('Productos')
-                ->description('Agregar productos')
-                ->collapsible()
-                ->schema([
-                    // products
-                    Repeater::make('productos')
+                    ->description('Agregar productos')
+                    ->collapsible()
+                    ->schema([
+                        // products
+                        Repeater::make('productos')
                             ->relationship()
                             ->schema([
+
                                 Select::make('producto_id')
                                     ->label('Producto')
                                     ->options(Producto::all()->pluck('nombre', 'id'))
                                     ->required()
                                     ->searchable()
                                     ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set,callable $get) {
+                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
                                         $set('precio', Producto::find($state)?->precio ?? 0);
                                         $set('subtotal', $state * $get('precio'));
                                     })
@@ -78,13 +91,15 @@ class PedidoResource extends Resource
                                         'md' => 4,
                                     ]),
 
-                                    Stepper::make('cantidad')
+                                Stepper::make('cantidad')
                                     ->minValue(0)
                                     ->maxValue(5)
                                     ->default(1)
                                     ->reactive()
                                     ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
-                                    $set('subtotal', $state * $get('precio'),
+                                    $set(
+                                        'subtotal',
+                                        $state * $get('precio'),
                                     ))
                                     ->columnSpan([
                                         'md' => 2,
@@ -92,13 +107,15 @@ class PedidoResource extends Resource
                                     ->required(),
                                 Forms\Components\TextInput::make('precio')
                                     ->label('Precio Unitario')
-                                    ->disabled()
+                                    ->reactive()
+                                    ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
+                                    $set('subtotal', $state * $get('cantidad')))
                                     ->numeric()
                                     ->required()
                                     ->columnSpan([
                                         'md' => 2,
                                     ]),
-                                    Forms\Components\TextInput::make('subtotal')
+                                Forms\Components\TextInput::make('subtotal')
                                     ->label('Subtotal')
                                     ->disabled()
                                     ->numeric()
@@ -121,7 +138,7 @@ class PedidoResource extends Resource
                                 'md' => 10,
                             ])
                             ->required(),
-                ])
+                    ])
             ]);
     }
 
@@ -129,7 +146,10 @@ class PedidoResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('numero_factura')->label('N°')->searchable(),
+                Tables\Columns\TextColumn::make('estado_pedidos.nombre')->label('Estado'),
+                Tables\Columns\TextColumn::make('clientes.nombre')->label('Cliente'),
+                Tables\Columns\TextColumn::make('total_venta'),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
