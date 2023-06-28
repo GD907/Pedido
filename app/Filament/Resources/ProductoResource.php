@@ -21,6 +21,7 @@ class ProductoResource extends Resource
     protected static ?string $model = Producto::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+    protected static ?string $navigationGroup = 'Carpetas';
 
     public static function form(Form $form): Form
     {
@@ -40,8 +41,8 @@ class ProductoResource extends Resource
                             ->maxLength(255),
                         Forms\Components\TextInput::make('precio')
                             ->required(),
-                        Forms\Components\TextInput::make('stock'),
-                        Forms\Components\TextInput::make('unidades_caja'),
+                        // Forms\Components\TextInput::make('stock'),
+                        // Forms\Components\TextInput::make('unidades_caja'),
                         Forms\Components\Select::make('categoria_productos_id')
                             ->required()->relationship('categoria_productos', 'nombre'),
                     ])
@@ -56,7 +57,6 @@ class ProductoResource extends Resource
                 Tables\Columns\TextColumn::make('codigo')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('nombre')->sortable()->searchable(),
                Tables\Columns\TextColumn::make('precio'),
-               Tables\Columns\TextColumn::make('stock'),
                Tables\Columns\TextColumn::make('categoria_productos.nombre')->label('Categoria'),
                 TextColumn::make('created_at')->dateTime()->label('Creado')
             ])
@@ -67,6 +67,9 @@ class ProductoResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+
+
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

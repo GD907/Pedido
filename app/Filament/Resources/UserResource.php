@@ -24,6 +24,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
 
+
     protected static function getNavigationLabel(): string
     {
         return trans('filament-user::user.resource.label');

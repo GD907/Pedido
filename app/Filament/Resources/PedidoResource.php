@@ -19,14 +19,15 @@ use Filament\Forms\Components\Select;
 // Section
 use Filament\Forms\Components\Section;
 use Icetalker\FilamentStepper\Forms\Components\Stepper;
-
+use AlperenErsoy\FilamentExport\Actions\FilamentExportBulkAction;
 use Filament\Forms\Components\Repeater;
-
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Hidden;
 class PedidoResource extends Resource
 {
     protected static ?string $model = Pedido::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     public static function form(Form $form): Form
     {
@@ -50,7 +51,7 @@ class PedidoResource extends Resource
                         Forms\Components\Select::make('clientes_id')
                             ->label('Cliente')
                             ->required()->options(Cliente::all()
-                                ->pluck('nombre', 'id'))
+                                ->pluck('nombre_comercio', 'id'))
                             ->preload()
                             ->columnSpan([
                                 'md' => 3,
@@ -63,9 +64,29 @@ class PedidoResource extends Resource
                             ->columnSpan([
                                 'md' => 3,
                             ]),
-                        Forms\Components\TextInput::make('total_venta') //Quiero guardar en este la suma de todas las ventas
+
+                            Hidden::make('total_venta') //Quiero guardar en este la suma de todas las ventas
+                        ->reactive(),
+                        // ->hidden(),
+                        Placeholder::make('total_venta2')
                             ->reactive()
-                            ->default(0),
+                            ->label('Total')
+                            ->columnSpan([
+                                'md' => 3,
+                            ])
+
+                            ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
+                            ->content(function ($get, $set) {
+                                $sum = 0;
+                                foreach ($get('productos') as $product) {
+                                $sum = $sum + ($product['precio'] * $product['cantidad']);
+                                }
+                                $set('total_venta', $sum);
+                                $sum = number_format($sum, 0, '.', '.');
+                                return $sum;
+                            }),
+
+
                     ]),
 
                 Section::make('Productos')
@@ -83,9 +104,9 @@ class PedidoResource extends Resource
                                     ->required()
                                     ->searchable()
                                     ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    ->afterStateUpdated(function ($state, callable $set,callable $get) {
                                         $set('precio', Producto::find($state)?->precio ?? 0);
-                                        $set('subtotal', $state * $get('precio'));
+                                        $set('subtotal', Producto::find($state)?->precio ?? 0);
                                     })
                                     ->columnSpan([
                                         'md' => 4,
@@ -93,7 +114,7 @@ class PedidoResource extends Resource
 
                                 Stepper::make('cantidad')
                                     ->minValue(0)
-                                    ->maxValue(5)
+                                    ->maxValue(50)
                                     ->default(1)
                                     ->reactive()
                                     ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
@@ -108,6 +129,7 @@ class PedidoResource extends Resource
                                 Forms\Components\TextInput::make('precio')
                                     ->label('Precio Unitario')
                                     ->reactive()
+                                    ->postfix('Gs')
                                     ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
                                     $set('subtotal', $state * $get('cantidad')))
                                     ->numeric()
@@ -119,7 +141,9 @@ class PedidoResource extends Resource
                                     ->label('Subtotal')
                                     ->disabled()
                                     ->numeric()
+                                    ->reactive()
                                     ->required()
+                                    ->postfix('Gs')
                                     ->columnSpan([
                                         'md' => 2,
                                     ]),
@@ -148,7 +172,7 @@ class PedidoResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('numero_factura')->label('N°')->searchable(),
                 Tables\Columns\TextColumn::make('estado_pedidos.nombre')->label('Estado'),
-                Tables\Columns\TextColumn::make('clientes.nombre')->label('Cliente'),
+                Tables\Columns\TextColumn::make('clientes.nombre_comercio')->label('Cliente'),
                 Tables\Columns\TextColumn::make('total_venta'),
             ])
             ->filters([
@@ -157,11 +181,13 @@ class PedidoResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\ForceDeleteBulkAction::make(),
                 Tables\Actions\RestoreBulkAction::make(),
+                FilamentExportBulkAction::make('export')
             ]);
     }
 
