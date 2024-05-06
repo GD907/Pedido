@@ -23,6 +23,7 @@ use AlperenErsoy\FilamentExport\Actions\FilamentExportBulkAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Hidden;
+
 class PedidoResource extends Resource
 {
     protected static ?string $model = Pedido::class;
@@ -79,7 +80,9 @@ class PedidoResource extends Resource
                             ->content(function ($get, $set) {
                                 $sum = 0;
                                 foreach ($get('productos') as $product) {
-                                $sum = $sum + ($product['precio'] * $product['cantidad']);
+                                $sum = $sum + (($product['precio'] * ($product['cantidad'])) - (($product['precio']*($product['pordescuento']/100)*$product['cantidad']))
+
+                            );
                                 }
                                 $set('total_venta', $sum);
                                 $sum = number_format($sum, 0, '.', '.');
@@ -101,7 +104,7 @@ class PedidoResource extends Resource
                                 Select::make('producto_id')
                                     ->label('Producto')
                                     ->options(Producto::all()->pluck('nombre', 'id'))
-                                    ->required()
+
                                     ->searchable()
                                     ->reactive()
                                     ->afterStateUpdated(function ($state, callable $set,callable $get) {
@@ -109,7 +112,7 @@ class PedidoResource extends Resource
                                         $set('subtotal', Producto::find($state)?->precio ?? 0);
                                     })
                                     ->columnSpan([
-                                        'md' => 4,
+                                        'md' => 2,
                                     ]),
 
                                 Stepper::make('cantidad')
@@ -117,32 +120,68 @@ class PedidoResource extends Resource
                                     ->maxValue(50)
                                     ->default(1)
                                     ->reactive()
+
+                                    // ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
+                                    // $set(
+                                    //     'descuento',
+                                    //     (($get('precio') * ($get('pordescuento'))/100))*$state,
+                                    // ))
                                     ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
                                     $set(
                                         'subtotal',
-                                        $state * $get('precio'),
+                                        ($state * ($get('precio')-($get('precio')*($get('pordescuento')/100)))),
                                     ))
                                     ->columnSpan([
-                                        'md' => 2,
-                                    ])
-                                    ->required(),
+                                        'md' => 1,
+                                    ]),
                                 Forms\Components\TextInput::make('precio')
                                     ->label('Precio Unitario')
                                     ->reactive()
-                                    ->postfix('Gs')
-                                    ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
-                                    $set('subtotal', $state * $get('cantidad')))
+
+                                   // ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
+                                   // $set('subtotal', $state * $get('cantidad')))
                                     ->numeric()
-                                    ->required()
+                                    ->disabled()
+
                                     ->columnSpan([
                                         'md' => 2,
                                     ]),
+                                    Select::make('pordescuento')
+                                    ->label('Descuento')
+                                    ->default(0)
+                                    ->reactive()
+    ->options([
+        0 => '0%',
+       1 => '1%',
+        2 => '2%',
+        3 => '3%',
+        4 => '4%',
+    ])
+    ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
+    $set(
+        'subtotal', ($get('precio')*$get('cantidad'))-(($get('precio') * ($state)/100))*$get('cantidad'),
+    )),
+    // Forms\Components\TextInput::make('descuento')
+    // ->label('Descuento')
+    // ->reactive()
+    // ->postfix('Gs')
+    // ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
+    // $set(
+    //     'subtotal',
+    //     ($get('cantidad') * $get('precio')),
+    // ))
+    // ->numeric()
+    // ->disabled()
+    // ->required()
+    // ->columnSpan([
+    //     'md' => 2,
+    // ]),
                                 Forms\Components\TextInput::make('subtotal')
                                     ->label('Subtotal')
                                     ->disabled()
                                     ->numeric()
                                     ->reactive()
-                                    ->required()
+
                                     ->postfix('Gs')
                                     ->columnSpan([
                                         'md' => 2,
@@ -161,7 +200,7 @@ class PedidoResource extends Resource
                             ->columns([
                                 'md' => 10,
                             ])
-                            ->required(),
+                            ,
                     ])
             ]);
     }

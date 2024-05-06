@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use App\Models\CategoriaProducto;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class RolePolicy
+class CategoriaProductoPolicy
 {
     use HandlesAuthorization;
 
@@ -18,19 +18,19 @@ class RolePolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view_any_shield::role');
+        return $user->can('view_any_categoria::producto');
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \Spatie\Permission\Models\Role  $role
+     * @param  \App\Models\CategoriaProducto  $categoriaProducto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Role $role)
+    public function view(User $user, CategoriaProducto $categoriaProducto)
     {
-        return $user->can('view_shield::role');
+        return $user->can('view_categoria::producto');
     }
 
     /**
@@ -41,31 +41,31 @@ class RolePolicy
      */
     public function create(User $user)
     {
-        return $user->can('create_shield::role');
+        return $user->can('create_categoria::producto');
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \Spatie\Permission\Models\Role  $role
+     * @param  \App\Models\CategoriaProducto  $categoriaProducto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Role $role)
+    public function update(User $user, CategoriaProducto $categoriaProducto)
     {
-        return $user->can('update_shield::role');
+        return $user->can('update_categoria::producto');
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \Spatie\Permission\Models\Role  $role
+     * @param  \App\Models\CategoriaProducto  $categoriaProducto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Role $role)
+    public function delete(User $user, CategoriaProducto $categoriaProducto)
     {
-        return $user->can('delete_shield::role');
+        return $user->can('delete_categoria::producto');
     }
 
     /**
@@ -76,19 +76,19 @@ class RolePolicy
      */
     public function deleteAny(User $user)
     {
-        return $user->can('delete_any_shield::role');
+        return $user->can('delete_any_categoria::producto');
     }
 
     /**
      * Determine whether the user can permanently delete.
      *
      * @param  \App\Models\User  $user
-     * @param  \Spatie\Permission\Models\Role  $role
+     * @param  \App\Models\CategoriaProducto  $categoriaProducto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Role $role)
+    public function forceDelete(User $user, CategoriaProducto $categoriaProducto)
     {
-        return $user->can('{{ ForceDelete }}');
+        return $user->can('force_delete_categoria::producto');
     }
 
     /**
@@ -99,19 +99,19 @@ class RolePolicy
      */
     public function forceDeleteAny(User $user)
     {
-        return $user->can('{{ ForceDeleteAny }}');
+        return $user->can('force_delete_any_categoria::producto');
     }
 
     /**
      * Determine whether the user can restore.
      *
      * @param  \App\Models\User  $user
-     * @param  \Spatie\Permission\Models\Role  $role
+     * @param  \App\Models\CategoriaProducto  $categoriaProducto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Role $role)
+    public function restore(User $user, CategoriaProducto $categoriaProducto)
     {
-        return $user->can('{{ Restore }}');
+        return $user->can('restore_categoria::producto');
     }
 
     /**
@@ -122,19 +122,19 @@ class RolePolicy
      */
     public function restoreAny(User $user)
     {
-        return $user->can('{{ RestoreAny }}');
+        return $user->can('restore_any_categoria::producto');
     }
 
     /**
      * Determine whether the user can replicate.
      *
      * @param  \App\Models\User  $user
-     * @param  \Spatie\Permission\Models\Role  $role
+     * @param  \App\Models\CategoriaProducto  $categoriaProducto
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function replicate(User $user, Role $role)
+    public function replicate(User $user, CategoriaProducto $categoriaProducto)
     {
-        return $user->can('{{ Replicate }}');
+        return $user->can('replicate_categoria::producto');
     }
 
     /**
@@ -145,7 +145,7 @@ class RolePolicy
      */
     public function reorder(User $user)
     {
-        return $user->can('{{ Reorder }}');
+        return $user->can('reorder_categoria::producto');
     }
 
 }

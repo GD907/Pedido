@@ -23,6 +23,6 @@ class EditUser extends EditRecord
 
     protected function getTitle(): string
     {
-        return trans('filament-user::user.resource.title.edit');
+        return trans('Editar Usuario');
     }
 }

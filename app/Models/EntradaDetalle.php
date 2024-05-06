@@ -5,9 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-class PedidoDetalle extends Model
+
+class EntradaDetalle extends Model
 {
     use HasFactory, SoftDeletes;
-    protected $table = 'pedido_detalles';
-    protected $fillable = ['sort', 'venta_id', 'producto_id', 'cantidad', 'precio','pordescuento', 'subtotal'];
+    protected $table = 'entrada_detalles';
+    protected $fillable = ['entrada_id', 'producto_id', 'cantidad', 'preciocompra','precioventa'];
 }

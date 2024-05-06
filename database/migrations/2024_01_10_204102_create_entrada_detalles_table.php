@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pedido_detalles', function (Blueprint $table) {
+        Schema::create('entrada_detalles', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('sort')->default(0);
-            $table->foreignId('pedido_id')->nullable()->constrained()->cascadeOnDelete();
+
+            $table->foreignId('entrada_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('producto_id')->nullable()->constrained()->cascadeOnDelete();
             $table->integer('cantidad');
-            $table->decimal('precio', 10, 2);
-            $table->decimal('pordescuento', 10, 2);
-            $table->decimal('subtotal', 10, 2);
+            $table->decimal('preciocompra', 10, 2)->nullable();
+            $table->decimal('precioventa', 10, 2)->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pedido_detalles');
+        Schema::dropIfExists('entrada_detalles');
     }
 };

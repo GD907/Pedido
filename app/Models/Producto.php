@@ -19,9 +19,11 @@ class Producto extends Model
         'nombre',
         'descripcion',
         'proveedor',
+        'preciocompra',
         'precio',
         'stock',
         'unidades_caja',
+        'umbralmin',
         'categoria_productos_id'
     ];
 }

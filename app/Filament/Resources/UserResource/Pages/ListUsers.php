@@ -11,6 +11,6 @@ class ListUsers extends ListRecords
 
     protected function getTitle(): string
     {
-        return trans('filament-user::user.resource.title.list');
+        return trans('Usuarios');
     }
 }

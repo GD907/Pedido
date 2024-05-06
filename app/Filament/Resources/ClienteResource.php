@@ -66,7 +66,6 @@ class ClienteResource extends Resource
                Tables\Columns\TextColumn::make('apellido'),
                Tables\Columns\TextColumn::make('direccion'),
                Tables\Columns\TextColumn::make('telefono'),
-                TextColumn::make('created_at')->dateTime()->label('Creado')
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

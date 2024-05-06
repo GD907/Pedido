@@ -17,9 +17,11 @@ return new class extends Migration
             $table->string('nombre');
             $table->string('descripcion')->nullable();
             $table->string('proveedor')->nullable();
+            $table->decimal('preciocompra', 8, 2);
             $table->decimal('precio', 8, 2);
             $table->integer('stock')->nullable();
             $table->integer('unidades_caja')->nullable();
+            $table->integer('umbralmin')->nullable();
             $table->unsignedBigInteger('categoria_productos_id');
             $table->foreign('categoria_productos_id')->references('id')->on('categoria_productos');
             $table->softDeletes();

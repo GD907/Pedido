@@ -15,35 +15,38 @@ use Filament\Tables\Columns\BooleanColumn;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\UserResource\Pages;
 use STS\FilamentImpersonate\Impersonate;
-
+use AlperenErsoy\FilamentExport\Actions\FilamentExportBulkAction;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
+    protected static ?string $navigationLabel = 'Usuarios';
+    protected static ?string $navigationGroup = 'Administración de Usuarios';
 
     protected static ?int $navigationSort = 9;
 
     protected static ?string $navigationIcon = 'heroicon-o-lock-closed';
 
 
-    protected static function getNavigationLabel(): string
-    {
-        return trans('filament-user::user.resource.label');
-    }
+    // protected static function getNavigationLabel(): string
+    // {
+    //     return trans('filament-user::user.resource.label');
+    // }
 
-    public static function getPluralLabel(): string
-    {
-        return trans('filament-user::user.resource.label');
-    }
+    // public static function getPluralLabel(): string
+    // {
+    //     return trans('filament-user::user.resource.label');
+    // }
 
-    public static function getLabel(): string
-    {
-        return trans('filament-user::user.resource.single');
-    }
+    // public static function getLabel(): string
+    // {
+    //     return trans('filament-user::user.resource.single');
+    // }
 
-    protected static function getNavigationGroup(): ?string
-    {
-        return config('filament-user.group');
-    }
+    // protected static function getNavigationGroup(): ?string
+    // {
+    //     return config('filament-user.group');
+    // }
 
     protected function getTitle(): string
     {
@@ -53,9 +56,9 @@ class UserResource extends Resource
     public static function form(Form $form): Form
     {
         $rows = [
-            TextInput::make('name')->required()->label(trans('filament-user::user.resource.name')),
-            TextInput::make('email')->email()->required()->label(trans('filament-user::user.resource.email')),
-            Forms\Components\TextInput::make('password')->label(trans('filament-user::user.resource.password'))
+            TextInput::make('name')->required()->label('Nombre'),
+            TextInput::make('email')->email()->required()->label('Correo'),
+            Forms\Components\TextInput::make('password')->label('Contraseña')
                 ->password()
                 ->maxLength(255)
                 ->dehydrateStateUsing(static function ($state) use ($form) {
@@ -97,8 +100,18 @@ class UserResource extends Resource
                 Tables\Filters\Filter::make('unverified')
                     ->label(trans('filament-user::user.resource.unverified'))
                     ->query(fn (Builder $query): Builder => $query->whereNull('email_verified_at')),
-            ]);
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
 
+
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make(),
+                FilamentExportBulkAction::make('export')
+            ]);
         if (config('filament-user.impersonate')) {
             $table->prependActions([
                 Impersonate::make('impersonate'),
