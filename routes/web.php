@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+// \Illuminate\Support\Facades\Route::get('form', Form::class);
 
 Route::get('/', function () {
     return redirect('/admin');
 });
-
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),

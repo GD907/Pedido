@@ -40,12 +40,16 @@ class ProductoResource extends Resource
                         Forms\Components\TextInput::make('proveedor')
                             ->maxLength(255),
                             Forms\Components\TextInput::make('preciocompra')
-                            ->required(),
+                            ->required()
+                            ->label('Precio de Compra'),
                         Forms\Components\TextInput::make('precio')
-                            ->required(),
-                         Forms\Components\TextInput::make('stock'),
-                         Forms\Components\TextInput::make('unidades_caja'),
-                         Forms\Components\TextInput::make('umbralmin'),
+                            ->required()
+                            ->label('Precio de Venta'),
+                         Forms\Components\TextInput::make('stock')
+                         ->label('Unidades en Stock'),
+                     //    Forms\Components\TextInput::make('unidades_caja'),
+                         Forms\Components\TextInput::make('umbralmin')
+                         ->label('Minimo de unidades (umbral minimo)'),
                         Forms\Components\Select::make('categoria_productos_id')
                             ->required()->relationship('categoria_productos', 'nombre'),
                     ])
@@ -60,7 +64,7 @@ class ProductoResource extends Resource
                 Tables\Columns\TextColumn::make('codigo')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('nombre')->sortable()->searchable(),
                Tables\Columns\TextColumn::make('precio'),
-               Tables\Columns\TextColumn::make('stock'),
+               Tables\Columns\TextColumn::make('stock')->label('Unidades Disponibles'),
 
             ])
             ->filters([

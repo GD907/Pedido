@@ -63,9 +63,9 @@ class ClienteResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nombre_comercio')->sortable()->searchable()->label('Nombre Comercial'),
                 Tables\Columns\TextColumn::make('nombre')->sortable()->searchable(),
-               Tables\Columns\TextColumn::make('apellido'),
+               Tables\Columns\TextColumn::make('apellido')->sortable()->searchable(),
                Tables\Columns\TextColumn::make('direccion'),
-               Tables\Columns\TextColumn::make('telefono'),
+               Tables\Columns\TextColumn::make('telefono')->searchable(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

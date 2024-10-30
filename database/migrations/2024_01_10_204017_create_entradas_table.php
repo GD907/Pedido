@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('entradas', function (Blueprint $table) {
-            $table->id();
-            $table->dateTime('fecha');
-            $table->string('observacion')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
-        });
+        $table->id();
+        $table->dateTime('fecha');
+        $table->unsignedBigInteger('users_id'); // Agregar el campo users_id
+        $table->foreign('users_id')->references('id')->on('users'); // Definir la clave foránea
+        $table->string('observacion')->nullable();
+        $table->softDeletes();
+        $table->timestamps();
+    });
     }
 
     /**

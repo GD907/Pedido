@@ -30,12 +30,25 @@ class EntradaResource extends Resource
 
             ->schema([
                 //
+
                 Forms\Components\DateTimePicker::make('fecha')
                             ->default(fn () => now())->disabled(),
+                            Forms\Components\Hidden::make('users_id')
+                            ->default(fn () => auth()->user()->id),
+                            Select::make('tipo_entrada')
+                            ->label('Tipo de Entrada')
+                            ->options([
+                                'compra' => 'Compra',
+                                'no_recibido' => 'No Recibido',
+                                'devolucion' => 'Devolucion',])
+                            ->required(),
+                            Forms\Components\TextInput::make('proveedor')
+                            ->maxLength(150)
+                            ->label('Proveedor'),
                             Forms\Components\TextInput::make('observacion')
                             ->maxLength(255)
                             ->columnSpan([
-                                'md' => 3,
+                                'md' => 2,
                             ]),
 
                             Section::make('Productos')
@@ -104,6 +117,8 @@ class EntradaResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('fecha')->label('Fecha de Entrada')->searchable(),
+                Tables\Columns\TextColumn::make('proveedor')->label('Proveedor')->searchable(),
+
 
             ])
             ->filters([

@@ -10,5 +10,5 @@ class EntradaDetalle extends Model
 {
     use HasFactory, SoftDeletes;
     protected $table = 'entrada_detalles';
-    protected $fillable = ['entrada_id', 'producto_id', 'cantidad', 'preciocompra','precioventa'];
+    protected $fillable = ['entrada_id', 'producto_id', 'cantidad', 'disponible', 'preciocompra','precioventa'];
 }

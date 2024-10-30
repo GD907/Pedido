@@ -10,7 +10,7 @@ class Entrada extends Model
 {
     use HasFactory, SoftDeletes;
     protected $table = 'entradas';
-    protected $fillable = ['fecha', 'observacion'];
+    protected $fillable = ['fecha',	'tipo_entrada',	'users_id',	'proveedor', 'observacion'];
     public function users()
     {
         // Una venta fue realizado por un usuario
