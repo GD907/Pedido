@@ -24,8 +24,8 @@ class CajasResource extends Resource
 {
     protected static ?string $model = Cajas::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
-
+    protected static ?string $navigationIcon = 'heroicon-o-calculator';
+    protected static ?string $navigationGroup = 'Ventas';
     public static function form(Form $form): Form
     {
         return $form
@@ -68,11 +68,18 @@ class CajasResource extends Resource
                 Tables\Columns\TextColumn::make('users.name')
                     ->sortable()
                     ->label('Encargado')
+                     // Mostrar "Abierto" o "Cerrado"
                     ->searchable(),
                 Tables\Columns\TextColumn::make('estado')->label('Estado')
                     ->searchable()
                     ->sortable()
-                    ->color(fn($record) => $record->estado === 'abierto' ? 'success' : 'danger') // 'success' para verde, 'danger' para rojo
+                     ->getStateUsing(fn($record) => $record->estado === 'abierto' ? 'Abierto' : 'Cerrado') // Mostrar "Abierto" o "Cerrado"
+                    ->color(fn($record) => $record->estado === 'abierto' ? 'success' : 'danger'), // 'success' para verde, 'danger' para rojo
+                    Tables\Columns\TextColumn::make('fue_procesado')->label('Procesado')
+                    ->sortable()
+                    ->formatStateUsing(fn($state) => $state === 1 ? 'Sí' : 'No') // Mostrar "Sí" o "No"
+                    ->color(fn($record) => $record->fue_procesado === 1 ? 'success' : 'danger') // 'success' para verde, 'danger' para rojo
+
 
 
             ])
@@ -120,15 +127,17 @@ class CajasResource extends Resource
                         return response()->streamDownload(function () use ($record) {
                             echo Pdf::loadHtml(
                                 Blade::render('pdf', ['record' => $record])
-                            )->stream();
+                            )->setPaper([0, 0, 198.45, 200], 'portrait')  // Ancho 80 mm en puntos, ajusta la altura según el contenido
+                            ->stream();
                         }, $record->numero_caja . '.pdf');
                     }),
+
                 Tables\Actions\Action::make('procesarTransacciones')
                     ->label('Procesar Stock')
                     ->icon('heroicon-o-check')
                     ->modalHeading('Desea actualizar el stock de productos?')
     ->modalSubheading('Estas seguro de que quieres actualizar el stock? No se puede deshacer.')
-    ->modalButton('Sí, Cerrar Caja')
+    ->modalButton('Sí, Actualizar s')
     ->visible(fn($record) => $record->estado === 'cerrado' && $record->fue_procesado == 0)
 
                     ->action(function (Cajas $record) {

@@ -44,12 +44,15 @@ class ProductoResource extends Resource
                             ->label('Precio de Compra'),
                         Forms\Components\TextInput::make('precio')
                             ->required()
-                            ->label('Precio de Venta'),
+                            ->label('Precio de Venta para Pedidos'),
+                            Forms\Components\TextInput::make('precio_transacciones')
+                            ->required()
+                            ->label('Precio de Venta para Transacciones'),
                          Forms\Components\TextInput::make('stock')
                          ->label('Unidades en Stock'),
                      //    Forms\Components\TextInput::make('unidades_caja'),
-                         Forms\Components\TextInput::make('umbralmin')
-                         ->label('Minimo de unidades (umbral minimo)'),
+                        //  Forms\Components\TextInput::make('umbralmin')
+                        //  ->label('Minimo de unidades (umbral minimo)'),
                         Forms\Components\Select::make('categoria_productos_id')
                             ->required()->relationship('categoria_productos', 'nombre'),
                     ])

@@ -32,7 +32,7 @@ class PedidoResource extends Resource
 {
     protected static ?string $model = Pedido::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
 
     public static function form(Form $form): Form
     {
@@ -50,9 +50,9 @@ class PedidoResource extends Resource
 
                         Forms\Components\DateTimePicker::make('fecha')
                             ->default(fn() => now())->disabled(),
-                        Forms\Components\Select::make('estado_pedidos_id')
-                            ->relationship('estado_pedidos', 'nombre')->default('pendiente')->default(1)
-                            ->label('Estado'),
+                        // Forms\Components\Select::make('estado_pedidos_id')
+                        //     ->relationship('estado_pedidos', 'nombre')->default('pendiente')->default(1)
+                        //     ->label('Estado'),
                         Forms\Components\Select::make('clientes_id')
                             ->label('Cliente')
                             ->required()->options(Cliente::all()
@@ -192,6 +192,8 @@ class PedidoResource extends Resource
                                         2 => '2%',
                                         3 => '3%',
                                         4 => '4%',
+                                        5 => '5%',
+                                        100 => '100 %',
                                     ])
                                     ->afterStateUpdated(fn($state, callable $set, callable $get) =>
                                     $set(
@@ -249,15 +251,15 @@ class PedidoResource extends Resource
                 Tables\Columns\TextColumn::make('numero_factura')
                     ->label('N°')
                     ->searchable(),
-                    Tables\Columns\TextColumn::make('estado_pedidos.nombre')
+                    Tables\Columns\TextColumn::make('estado_pedido')
                     ->searchable()
                     ->sortable()
                     ->label('Estado')
                     ->color(function ($record) {
-                        return match ($record->estado_pedidos_id) {
-                            1 => 'secondary', // Fondo amarillo para estado 1
-                            2 => 'danger',  // Fondo rojo para estado 2
-                            3 => 'success', // Fondo verde para estado 3
+                        return match ($record->estado_pedido) {
+                            'Pendiente' => 'secondary', // Fondo amarillo para estado 1
+                            'Cancelado' => 'danger',  // Fondo rojo para estado 2
+                            'Entregado' => 'success', // Fondo verde para estado 3
                             default => 'secondary', // Otro color para otros estados
                         };
                     }),
@@ -270,7 +272,12 @@ class PedidoResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->label('Cliente'),
-                Tables\Columns\TextColumn::make('total_venta')->label('Total Venta (Gs)'),
+                Tables\Columns\TextColumn::make('total_venta')->label('Total Venta')
+                ->formatStateUsing(function ($state) {
+                    // Divide por 100 si el valor original incluye centavos y luego formatea sin decimales
+                    $formattedValue = number_format($state, 0, '', '.');
+                    return $formattedValue . ' Gs';
+                })
             ])
             ->defaultSort('fecha', 'desc')
             ->filters([
@@ -279,7 +286,7 @@ class PedidoResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
-                ->visible(fn ($record) => !in_array($record->estado_pedidos_id, [2, 3])),
+                ->visible(fn ($record) => $record->estado_pedido !== 'Cancelado'),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\Action::make('pdf')
                     ->label('Imprimir')
@@ -293,21 +300,22 @@ class PedidoResource extends Resource
                         return response()->streamDownload(function () use ($record) {
                             echo Pdf::loadHtml(
                                 Blade::render('factura', ['record' => $record])
-                            )->stream();
+                            ) ->setPaper([0, 0, 595.35, 340.2])
+                            ->stream();
                         }, $record->numero_factura . '.pdf');
                     }),
                     Tables\Actions\Action::make('procesar_pedido')
     ->label('Procesar')
     ->color('primary')
-    ->icon('heroicon-s-check')
+    ->icon('heroicon-s-save')
     ->requiresConfirmation()
-    ->modalHeading('Confirmar cancelación')
+    ->modalHeading('Confirmar entrega')
     ->modalSubheading('¿Estás seguro de que este pedido ha sido entregado? Esta acción no se puede deshacer.')
     ->modalButton('Sí, pedido entregado')
-    ->visible(fn ($record) => !in_array($record->estado_pedidos_id, [2, 3]))
+    ->visible(fn ($record) => !in_array($record->estado_pedido, ['Cancelado', 'Entregado']))
     ->action(function (Pedido $record) {
-        // Cambiar el estado del pedido a '3' (procesado)
-        $record->update(['estado_pedidos_id' => 3]);
+        // Cambiar el estado del pedido a (procesado)
+        $record->update(['estado_pedido' => 'Entregado']);
 
         // Cargar la relación de productos en pedidoDetalles
         $record->load('productos.producto');
@@ -326,13 +334,13 @@ class PedidoResource extends Resource
     ->label('Cancelar')
     ->color('danger')
     ->icon('heroicon-s-x-circle')
-    ->visible(fn ($record) => !in_array($record->estado_pedidos_id, [2, 3]))
+    // ->visible(fn ($record) => !in_array($record->estado_pedidos_id, [2, 3]))
     ->requiresConfirmation()
     ->modalHeading('Confirmar cancelación')
     ->modalSubheading('¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.')
     ->modalButton('Sí, cancelar pedido')
     ->action(function (Pedido $record) {
-        $record->update(['estado_pedidos_id' => 2]);
+        $record->update(['estado_pedido' => 'Cancelado']);
 
     })
 

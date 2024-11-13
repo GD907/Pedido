@@ -29,7 +29,8 @@ class TransaccionesResource extends Resource
 {
     protected static ?string $model = Transacciones::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
+    protected static ?string $navigationGroup = 'Ventas';
 
     public static function form(Form $form): Form
     {
@@ -155,8 +156,7 @@ class TransaccionesResource extends Resource
                                     ->searchable()
                                     ->reactive()
                                     ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                        $set('precio', Producto::find($state)?->precio ?? 0);
-                                        $set('subtotal', Producto::find($state)?->precio ?? 0);
+                                        $set('precio', Producto::find($state)?->precio_transacciones ?? 0);
                                     })
                                     ->columnSpan([
                                         'md' => 2,
@@ -221,10 +221,6 @@ class TransaccionesResource extends Resource
                                     ]),
                                 Forms\Components\TextInput::make('precio')
                                     ->label('Precio Unitario (Gs)')
-                                    ->reactive()
-
-                                    // ->afterStateUpdated(fn ($state, callable $set, callable $get) =>
-                                    // $set('subtotal', $state * $get('cantidad')))
                                     ->numeric()
                                     ->disabled()
 
@@ -241,6 +237,7 @@ class TransaccionesResource extends Resource
                                         2 => '2%',
                                         3 => '3%',
                                         4 => '4%',
+                                        5 => '5%',
                                     ])
                                     ->afterStateUpdated(fn($state, callable $set, callable $get) =>
                                     $set(
@@ -267,7 +264,7 @@ class TransaccionesResource extends Resource
                                     ->disabled()
                                     ->numeric()
                                     ->reactive()
-
+                                    ->required()
                                     ->postfix('Gs')
                                     ->columnSpan([
                                         'md' => 2,
@@ -318,7 +315,13 @@ class TransaccionesResource extends Resource
                 ->searchable(),
                 Tables\Columns\TextColumn::make('clientes.nombre_comercio')->label('Cliente')
                 ->sortable(),
-                Tables\Columns\TextColumn::make('total_trx')->label('Total Venta (Gs)'),
+                Tables\Columns\TextColumn::make('total_trx')
+                ->label('Total Venta')
+                ->formatStateUsing(function ($state) {
+                    // Divide por 100 si el valor original incluye centavos y luego formatea sin decimales
+                    $formattedValue = number_format($state, 0, '', '.');
+                    return $formattedValue . ' Gs';
+                })
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),

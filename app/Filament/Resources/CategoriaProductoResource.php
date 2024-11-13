@@ -17,8 +17,8 @@ class CategoriaProductoResource extends Resource
 {
     protected static ?string $model = CategoriaProducto::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-collection';
-
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-list';
+    protected static ?string $navigationGroup = 'Carpetas';
     public static function form(Form $form): Form
     {
         return $form
@@ -27,7 +27,8 @@ class CategoriaProductoResource extends Resource
                 ->required()
                 ->maxLength(255),
             Forms\Components\TextInput::make('descripcion')
-                ->maxLength(255),
+                ->maxLength(255)
+                ->required()
             ]);
     }
 

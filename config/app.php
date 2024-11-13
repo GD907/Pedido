@@ -171,6 +171,7 @@ return [
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
         OwenIt\Auditing\AuditingServiceProvider::class,
+        App\Providers\FilamentAdminServiceProvider::class,
     ])->toArray(),
 
     /*

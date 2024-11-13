@@ -7,59 +7,94 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            font-size: 12px; /* Ajuste de tamaño de fuente */
+            letter-spacing: 2px; /* Espaciado entre letras */
+            margin: 0;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        .header-table {
+            width: calc(60% + 1cm); /* Aumenta el ancho de la tabla en 1 cm */
+            margin-left: auto;
+            margin-bottom: 5px; /* Reducido el margen inferior */
         }
-        table, th, td {
-            border: 1px solid transparent; /* Bordes transparentes */
+        .header-table td {
+            vertical-align: top;
+            padding: 3px;
         }
-        th, td {
-            padding: 8px;
+        .left-header {
             text-align: left;
         }
-        .header {
+        .right-header {
+            text-align: right;
+        }
+        .right-header h1 {
+            font-size: 14px; /* Fuente para "Casa Nidia" */
+            margin: 0;
+        }
+        .right-header p, .left-header p {
+            font-size: 12px;
+            margin: 3px 0;
+        }
+        table {
+            width: 90%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            margin-left: auto;
+        }
+        th, td {
+            padding: 4px;
+            text-align: left;
+            border: 1px solid transparent;
+        }
+        .centered {
             text-align: center;
         }
     </style>
 </head>
 <body>
-    <h1 class="header">Factura N° {{ $record->numero_factura }}</h1>
-    <p><strong>Fecha:</strong> {{ $record->fecha }}</p>
-    <p><strong>Cliente:</strong> {{ $record->clientes->nombre_comercio ?? ' ' }}</p>
-    <p><strong>Encargado:</strong> {{ $record->users->name ?? 'Sin encargado' }}</p>
-    <p><strong>Estado del Pedido:</strong> {{ $record->estado_pedidos->nombre ?? 'Sin estado' }}</p>
-    <p><strong>Observaciones:</strong> {{ $record->observacion ?? 'Sin observaciones' }}</p>
+
+    <table class="header-table">
+        <tr>
+            <td class="left-header">
+                <p><strong>Fecha:</strong> {{ \Carbon\Carbon::parse($record->fecha)->format('d/m/Y') }}</p>
+                <p><strong>Cliente:</strong> {{ $record->clientes->nombre_comercio ?? ' ' }}</p>
+                <p><strong>Encargado:</strong> {{ $record->users->name ?? 'Sin encargado' }}</p>
+            </td>
+            <td class="right-header">
+                <h1>Casa Nidia</h1>
+                <p>Pirity km 14 - (0985)731538</p>
+                <p>Factura N° {{ $record->numero_factura }}</p>
+            </td>
+        </tr>
+    </table>
 
     <table>
         <thead>
             <tr>
+                <th class="centered">Cantidad</th>
                 <th>Descripción</th>
-                <th>Cantidad</th>
-                <th>Precio Unitario</th>
-                <th>Porcentaje de Descuento</th>
-                <th>Subtotal</th>
+                <th class="centered">Precio Unitario</th>
+                <th class="centered">Descuento(%)</th>
+                <th class="centered">Subtotal</th>
             </tr>
         </thead>
         <tbody>
             @foreach($record->productos as $detalle)
             <tr>
+                <td class="centered">{{ $detalle->cantidad }}</td>
                 <td>{{ $detalle->producto->nombre ?? 'Sin descripción' }}</td>
-                <td>{{ $detalle->cantidad }}</td>
-                <td>{{ number_format($detalle->precio, 0) }}</td> <!-- Sin decimales -->
-                <td>{{ number_format($detalle->pordescuento, 0) }}%</td> <!-- Sin decimales -->
-                <td>{{ number_format($detalle->subtotal, 0) }}</td> <!-- Sin decimales -->
+                <td class="centered">{{ number_format($detalle->precio, 0, ',', '.') }}</td>
+                <td class="centered">{{ number_format($detalle->pordescuento, 0) }}%</td>
+                <td class="centered">{{ number_format($detalle->subtotal, 0, ',', '.') }}</td>
             </tr>
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="4" style="text-align: right;"><strong>Total Venta:</strong></td>
-                <td>{{ number_format($record->total_venta, 0) }}</td> <!-- Sin decimales -->
+                <td colspan="4" style="text-align: right;"><strong>Total:</strong></td>
+                <td class="centered">{{ number_format($record->total_venta, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>
+
 </body>
 </html>
