@@ -1,18 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\ProductoResource\Pages;
+namespace App\Filament\Resources\RopaResource\Pages;
 
-use App\Filament\Resources\ProductoResource;
+use App\Filament\Resources\RopaResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditProducto extends EditRecord
+class EditRopa extends EditRecord
 {
-    protected static string $resource = ProductoResource::class;
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
-    }
+    protected static string $resource = RopaResource::class;
+
     protected function getActions(): array
     {
         return [

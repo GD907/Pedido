@@ -128,23 +128,23 @@ class PedidoResource extends Resource
                                     ->columnSpan([
                                         'md' => 2,
                                     ]),
-                                Hidden::make('disponible')
-                                    ->reactive(),
-                                Placeholder::make('disponible2')
-                                    ->reactive()
-                                    ->label('Disponible')
-                                    // ->columnSpan([
-                                    //     'md' => 3,
-                                    // ])
+                                // Hidden::make('disponible')
+                                //     ->reactive(),
+                                // Placeholder::make('disponible2')
+                                //     ->reactive()
+                                //     ->label('Disponible')
+                                //     // ->columnSpan([
+                                //     //     'md' => 3,
+                                //     // ])
 
-                                    // ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
-                                    ->content(function ($get, $set) {
-                                        $cant = $get('producto_id');
-                                        $cant = intval($cant);
-                                        $set('disponible', Producto::find($cant)?->stock ?? 0);
-                                        $cant = $get('disponible');
-                                        return  $cant;
-                                    }),
+                                //     // ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
+                                //     ->content(function ($get, $set) {
+                                //         $cant = $get('producto_id');
+                                //         $cant = intval($cant);
+                                //         $set('disponible', Producto::find($cant)?->stock ?? 0);
+                                //         $cant = $get('disponible');
+                                //         return  $cant;
+                                //     }),
 
                                 Forms\Components\TextInput::make('cantidad')
                                     ->minValue(0)
@@ -152,16 +152,16 @@ class PedidoResource extends Resource
                                     ->numeric()
                                     ->default(1)
                                     ->reactive()
-                                    ->rules([
-                                        fn($get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
+                                    // ->rules([
+                                    //     fn($get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
 
-                                            $dis = $get('disponible');
+                                    //         $dis = $get('disponible');
 
-                                            if ($value > $get('disponible')) {
-                                                $fail("Cantidad no disponible. Stock actual: {$dis} unidades.");
-                                            }
-                                        },
-                                    ])
+                                    //         if ($value > $get('disponible')) {
+                                    //             $fail("Cantidad no disponible. Stock actual: {$dis} unidades.");
+                                    //         }
+                                    //     },
+                                    // ])
                                     ->afterStateUpdated(fn($state, callable $set, callable $get) =>
                                     $set(
                                         'subtotal',

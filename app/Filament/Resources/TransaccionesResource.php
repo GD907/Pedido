@@ -161,39 +161,25 @@ class TransaccionesResource extends Resource
                                     ->columnSpan([
                                         'md' => 2,
                                     ]),
-                                    Hidden::make('name_product')
+
+                                    Hidden::make('searchprod')
                                     ->reactive(),
-                                    Placeholder::make('name_product2')
+                                Placeholder::make('search_prod')
                                     ->reactive()
-                                    ->label('Producto')
+                                    ->label('Nombre del Producto')
                                     // ->columnSpan([
                                     //     'md' => 3,
                                     // ])
 
                                     // ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
                                     ->content(function ($get, $set) {
-                                        $name = $get('producto_id');
-                                        $set('name_product', Producto::find($name)?->nombre );
-                                        $name = $get('name_product');
-                                        return  $name;
+                                        $code = $get('producto_id');
+                                        $set('searchprod', Producto::find($code)?->nombre ?? 0);
+                                        $code = $get('searchprod');
+                                        return  $code;
                                     }),
-                                Hidden::make('disponible')
-                                    ->reactive(),
-                                Placeholder::make('disponible2')
-                                    ->reactive()
-                                    ->label('Disponible')
-                                    // ->columnSpan([
-                                    //     'md' => 3,
-                                    // ])
 
-                                    // ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
-                                    ->content(function ($get, $set) {
-                                        $cant = $get('producto_id');
-                                        $cant = intval($cant);
-                                        $set('disponible', Producto::find($cant)?->stock ?? 0);
-                                        $cant = $get('disponible');
-                                        return  $cant;
-                                    }),
+
 
                                 Forms\Components\TextInput::make('cantidad')
                                     ->minValue(0)
@@ -201,16 +187,6 @@ class TransaccionesResource extends Resource
                                     ->numeric()
                                     ->default(1)
                                     ->reactive()
-                                    ->rules([
-                                        fn($get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
-
-                                            $dis = $get('disponible');
-
-                                            if ($value > $get('disponible')) {
-                                                $fail("Cantidad no disponible. Stock actual: {$dis} unidades.");
-                                            }
-                                        },
-                                    ])
                                     ->afterStateUpdated(fn($state, callable $set, callable $get) =>
                                     $set(
                                         'subtotal',

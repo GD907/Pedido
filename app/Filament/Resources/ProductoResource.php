@@ -66,7 +66,7 @@ class ProductoResource extends Resource
 
                 Tables\Columns\TextColumn::make('codigo')->sortable()->searchable(),
                 Tables\Columns\TextColumn::make('nombre')->sortable()->searchable(),
-               Tables\Columns\TextColumn::make('precio'),
+               Tables\Columns\TextColumn::make('precio')->label('Precio Pedidos'),
                Tables\Columns\TextColumn::make('stock')->label('Unidades Disponibles'),
 
             ])

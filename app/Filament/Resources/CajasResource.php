@@ -34,7 +34,7 @@ class CajasResource extends Resource
                 Card::make()
                     ->schema([
                         // ...
-                        Forms\Components\DateTimePicker::make('fecha')
+                        Forms\Components\DateTimePicker::make('fecha')->label('Fecha Apertura:')
                             ->default(fn() => now())->disabled(),
                         Forms\Components\TextInput::make('numero_caja')
                             ->disabled()
@@ -46,8 +46,23 @@ class CajasResource extends Resource
                             ]),
                         Forms\Components\Hidden::make('users_id')
                             ->default(fn() => auth()->user()->id),
-
-
+                            Forms\Components\TextInput::make('estado')->label('Estado de Caja')
+                            ->default('abierto')
+                            ->disabled(),
+                            Forms\Components\TextInput::make('cantidad_trx')->label('Cantidad de Transacciones')
+                            ->default('0')
+                            ->disabled(),
+                            Forms\Components\TextInput::make('total_caja')->label('Total Monto en Caja:')
+                            ->default('0')
+                            ->disabled(),
+                            Forms\Components\TextInput::make('contador_ediciones')->label('Ediciones:')
+                            ->default('0')
+                            ->disabled(),
+                            Forms\Components\TextInput::make('contador_cancelados')->label('Transacciones Canceladas:')
+                            ->default('0')
+                            ->disabled(),
+                            Forms\Components\TextInput::make('cierre')->label('Hora de Cierre:')
+                            ->disabled(),
 
                     ])
 
