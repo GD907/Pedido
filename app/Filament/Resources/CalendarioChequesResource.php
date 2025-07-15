@@ -26,7 +26,7 @@ class CalendarioChequesResource extends Resource
     protected static ?string $model = CalendarioCheques::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
-
+    protected static ?string $navigationGroup = 'Administración';
     public static function form(Form $form): Form
     {
         return $form

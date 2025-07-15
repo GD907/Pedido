@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\RopaResource\Pages;
+namespace App\Filament\Resources\RepartosResource\Pages;
 
-use App\Filament\Resources\RopaResource;
+use App\Filament\Resources\RepartosResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditRopa extends EditRecord
+class EditRepartos extends EditRecord
 {
-    protected static string $resource = RopaResource::class;
+    protected static string $resource = RepartosResource::class;
 
     protected function getActions(): array
     {

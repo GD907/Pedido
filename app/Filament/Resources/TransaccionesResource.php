@@ -25,6 +25,8 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Section;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Blade;
+use Filament\Tables\Columns\{TextColumn, BadgeColumn};
+
 class TransaccionesResource extends Resource
 {
     protected static ?string $model = Transacciones::class;
@@ -37,107 +39,140 @@ class TransaccionesResource extends Resource
         return $form
             ->schema([
                 //
-                Card::make()
-                    ->schema([
-                        // ...
-                        Forms\Components\Hidden::make('users_id')
-                            ->default(fn() => auth()->user()->id),
-                        Forms\Components\DateTimePicker::make('fecha')
-                            ->default(fn() => now())->disabled(),
-                        Forms\Components\TextInput::make('numero_trx')
-                            ->disabled()
-                            ->default('TRX-' . random_int(100000, 999999)),
-                        Forms\Components\TextInput::make('observacion')
-                            ->maxLength(255)
-                            ->columnSpan([
-                                'md' => 2,
-                            ]),
-                        Forms\Components\Select::make('clientes_id')
-                            ->label('Cliente')
-                            ->options(Cliente::all()
-                                ->pluck('nombre_comercio', 'id'))
-                            ->preload()
-                            ->columnSpan([
-                                'md' => 3,
-                            ]),
-                            Forms\Components\Select::make('caja_id')
-                            ->label('Caja')
-                            ->required()
-                            ->placeholder('Seleccione una caja disponible')
-                            ->helperText('Si no se visualiza ninguna caja, asegúrese de abrir una caja.')
-                            ->options($cajas = Cajas::where('estado', 'abierto') // Filtrar por estado 'abierto'
-                                ->where('users_id', Auth::id()) // Filtrar por el usuario autenticado
-                                ->pluck('numero_caja', 'id'))
-                            ->default($cajas->keys()->first()) // Seleccionar por defecto el primer id
-                            ->preload()
-                            ->columnSpan([
-                                'md' => 3,
-                            ]),
+                Card::make()->schema([
+                    // Fila 1
+                    Forms\Components\DateTimePicker::make('fecha')
+                        ->label('Fecha')
+                        ->default(fn() => now())
+                        ->disabled()
+                        ->columnSpan(1),
 
+                    Forms\Components\TextInput::make('numero_trx')
+                        ->label('N° Transacción')
+                        ->disabled()
+                        ->default('TRX-' . random_int(100000, 999999))
+                        ->columnSpan(1),
 
-                        Hidden::make('total_trx') //Quiero guardar en este la suma de todas las ventas
-                            ->reactive(),
-                        // ->hidden(),
-                        Placeholder::make('total2')
-                            ->reactive()
-                            ->label('Total (Gs)')
-                            ->columnSpan([
-                                'md' => 3,
-                            ])
-                            ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
-                            ->content(function ($get, $set) {
-                                $sum = 0;
-                                foreach ($get('productos') as $product) {
-                                    // Verificar que 'precio', 'cantidad' y 'pordescuento' sean numéricos
-                                    if (is_numeric($product['precio']) && is_numeric($product['cantidad']) && is_numeric($product['pordescuento'])) {
-                                        $precio = $product['precio'];
-                                        $cantidad = $product['cantidad'];
-                                        $pordescuento = $product['pordescuento'];
+                    Forms\Components\Select::make('caja_id')
+                        ->label('Caja')
+                        ->required()
+                        ->placeholder('Seleccione una caja disponible')
+                        ->helperText('Si no se visualiza ninguna caja, asegúrese de abrir una caja.')
+                        ->options($cajas = Cajas::where('estado', 'abierto')
+                            ->where('users_id', Auth::id())
+                            ->pluck('numero_caja', 'id'))
+                        ->default($cajas->keys()->first())
+                        ->preload()
+                        ->columnSpan(1),
 
-                                        $subtotal = $precio * $cantidad;
-                                        $descuento = $subtotal * ($pordescuento / 100);
-                                        $sum += $subtotal - $descuento;
-                                    } else {
-                                        // Aquí simplemente omitimos el producto no válido
-                                        continue;
-                                    }
+                    // Fila 2
+                    Forms\Components\TextInput::make('observacion')
+                        ->label('Observación')
+                        ->maxLength(255)
+                        ->columnSpan(3),
+
+                    // Fila 3
+                    Forms\Components\Select::make('clientes_id')
+                        ->label('Cliente')
+                        ->options(Cliente::all()->pluck('nombre_comercio', 'id'))
+                        ->preload()
+                        ->columnSpan(2),
+
+                    Forms\Components\Select::make('metodo_pago')
+                        ->label('Método de Pago')
+                        ->required()
+                        ->default('efectivo')
+                        ->options([
+                            'efectivo' => 'Efectivo',
+                            'transferencia' => 'Transferencia',
+                            'tarjeta' => 'Tarjeta',
+                        ])
+                        ->columnSpan(1),
+
+                    // Hidden
+                    Forms\Components\Hidden::make('users_id')
+                        ->default(fn() => auth()->user()->id),
+
+                    Forms\Components\Hidden::make('total_trx')
+                        ->reactive(),
+
+                    Placeholder::make('total2')
+                        ->reactive()
+                        ->label('Total (Gs)')
+                        ->columnSpan(3)
+                        ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
+                        ->content(function ($get, $set) {
+                            $sum = 0;
+                            foreach ($get('productos') as $product) {
+                                if (is_numeric($product['precio']) && is_numeric($product['cantidad']) && is_numeric($product['pordescuento'])) {
+                                    $precio = $product['precio'];
+                                    $cantidad = $product['cantidad'];
+                                    $pordescuento = $product['pordescuento'];
+
+                                    $subtotal = $precio * $cantidad;
+                                    $descuento = $subtotal * ($pordescuento / 100);
+                                    $sum += $subtotal - $descuento;
                                 }
-                                $set('total_trx', $sum);
-                                $sum = number_format($sum, 0, '.', '.');
-                                return $sum;
-                            }),
+                            }
+                            $set('total_trx', $sum);
+                            return number_format($sum, 0, '.', '.');
+                        }),
+                    Forms\Components\Select::make('porcentaje_descuento')
+                        ->label('Descuento total (%)')
+                        ->default(0)
+                        ->options([
+                            0 => '0%',
+                            1 => '1%',
+                            2 => '2%',
+                            3 => '3%',
+                            4 => '4%',
+                            5 => '5%',
+                            6 => '6%',
+                            7 => '7%',
+                            8 => '8%',
+                            9 => '9%',
+                            10 => '10%',
+                        ])
+                        ->reactive()
+                        ->columnSpan(1),
 
-                    ]),
-                    Card::make()
+                    Forms\Components\Placeholder::make('total_con_descuento')
+                        ->label('Total con descuento')
+                        ->columnSpan(2)
+                        ->extraAttributes(['class' => 'text-green-600 text-2xl', 'align' => 'right'])
+                        ->reactive()
+                        ->visible(fn ($get) => intval($get('porcentaje_descuento')) > 0)
+                        ->content(function ($get, $set) {
+                            $total = $get('total_trx') ?? 0;
+                            $desc = $get('porcentaje_descuento') ?? 0;
+                            $conDescuento = $total - ($total * ($desc / 100));
+                            $set('total_con_descuento', $conDescuento);
+                            return number_format($conDescuento, 0, '', '.') . ' Gs';
+                        }),
+                    Forms\Components\Hidden::make('total_con_descuento')->dehydrated(),
+                ])->columns(3),
+
+                Card::make()
+                    ->columns(2)
                     ->schema([
                         Select::make('product_search')
-                        ->label('Buscar producto por nombre')
-                        ->placeholder('Seleccione un producto para ver su código')
-                        ->options(Producto::all()->pluck('nombre', 'id'))
-                        ->searchable()
-                        ->reactive()
-                        ->columnSpan([
-                            'md' => 2,
-                        ]),
-                        Hidden::make('search')
-                        ->reactive(),
-                    Placeholder::make('search_code')
-                        ->reactive()
-                        ->label('Codigo del Producto')
-                        // ->columnSpan([
-                        //     'md' => 3,
-                        // ])
+                            ->label('Buscar producto por nombre')
+                            ->placeholder('Seleccione un producto para ver su código')
+                            ->options(Producto::all()->pluck('nombre', 'id'))
+                            ->searchable()
+                            ->reactive()
+                            ->columnSpan(1),
 
-                        // ->extraAttributes(['class' => 'text-red-500 text-3xl', 'align' => 'right'])
-                        ->content(function ($get, $set) {
-                            $code = $get('product_search');
-                            $set('search', Producto::find($code)?->codigo ?? 0);
-                            $code = $get('search');
-                            return  $code;
-                        }),
-                    ])
-                    ->columns(2),
-
+                        Placeholder::make('search_code')
+                            ->label('Código del Producto')
+                            ->reactive()
+                            ->content(function ($get, $set) {
+                                $code = $get('product_search');
+                                $set('search', Producto::find($code)?->codigo ?? 0);
+                                return $get('search');
+                            })
+                            ->columnSpan(1),
+                    ]),
 
 
                 Section::make('Productos')
@@ -146,6 +181,7 @@ class TransaccionesResource extends Resource
                     ->schema([
                         // products
                         Repeater::make('productos')
+                            ->id('repeater-productos')
                             ->relationship()
                             ->schema([
 
@@ -155,14 +191,22 @@ class TransaccionesResource extends Resource
                                     ->options(Producto::all()->pluck('codigo', 'id'))
                                     ->searchable()
                                     ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                                        $set('precio', Producto::find($state)?->precio_transacciones ?? 0);
+                                    ->afterStateUpdated(function ($state, callable $set) {
+                                        $producto = Producto::find($state);
+
+                                        $set('precio', $producto?->precio_transacciones ?? 0);
+                                        $set('cantidad', 1);
+                                        $set('pordescuento', 0);
+
+                                        // Calcular subtotal
+                                        $subtotal = $producto?->precio_transacciones ?? 0;
+                                        $set('subtotal', $subtotal);
                                     })
                                     ->columnSpan([
                                         'md' => 2,
                                     ]),
 
-                                    Hidden::make('searchprod')
+                                Hidden::make('searchprod')
                                     ->reactive(),
                                 Placeholder::make('search_prod')
                                     ->reactive()
@@ -182,19 +226,16 @@ class TransaccionesResource extends Resource
 
 
                                 Forms\Components\TextInput::make('cantidad')
-                                    ->minValue(0)
-                                    ->maxValue(10000)
                                     ->numeric()
                                     ->default(1)
                                     ->reactive()
-                                    ->afterStateUpdated(fn($state, callable $set, callable $get) =>
-                                    $set(
-                                        'subtotal',
-                                        ($state * ($get('precio') - ($get('precio') * ($get('pordescuento') / 100)))),
-                                    ))
-                                    ->columnSpan([
-                                        'md' => 1,
-                                    ]),
+                                    ->afterStateUpdated(
+                                        fn($state, callable $set, callable $get) =>
+                                        $set(
+                                            'subtotal',
+                                            ($state * ($get('precio') - ($get('precio') * ($get('pordescuento') / 100))))
+                                        )
+                                    ),
                                 Forms\Components\TextInput::make('precio')
                                     ->label('Precio Unitario (Gs)')
                                     ->numeric()
@@ -214,12 +255,19 @@ class TransaccionesResource extends Resource
                                         3 => '3%',
                                         4 => '4%',
                                         5 => '5%',
+                                        6 => '6%',
+                                        7 => '7%',
+                                        8 => '8%',
+                                        9 => '9%',
+                                        10 => '10%',
                                     ])
-                                    ->afterStateUpdated(fn($state, callable $set, callable $get) =>
-                                    $set(
-                                        'subtotal',
-                                        ($get('precio') * $get('cantidad')) - (($get('precio') * ($state) / 100)) * $get('cantidad'),
-                                    )),
+                                    ->afterStateUpdated(
+                                        fn($state, callable $set, callable $get) =>
+                                        $set(
+                                            'subtotal',
+                                            ($get('precio') * $get('cantidad')) - (($get('precio') * $state / 100) * $get('cantidad'))
+                                        )
+                                    ),
                                 // Forms\Components\TextInput::make('descuento')
                                 // ->label('Descuento')
                                 // ->reactive()
@@ -266,38 +314,51 @@ class TransaccionesResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-        ->defaultSort('fecha', 'desc') // Ordena por la columna de fecha en orden descendente
+            ->defaultSort('fecha', 'desc')
             ->columns([
-                //
-                Tables\Columns\TextColumn::make('numero_trx')->label('TRX N°')
-                ->sortable()
-                ->searchable(),
-                Tables\Columns\TextColumn::make('cajas.numero_caja')->label('Caja N°')
-                ->sortable()
-                ->searchable(),
                 Tables\Columns\TextColumn::make('fecha')
-                ->sortable()
-                ->label('Fecha'),
-                Tables\Columns\TextColumn::make('estado_transaccion')->label('Estado')
-                ->sortable()
-                ->color(function ($record) {
-                    return match ($record->estado_transaccion) {
-                        'Procesado' => 'success',  // Fondo verde para estado 'Procesado'
-                        'Cancelado' => 'danger',  // Fondo verde para estado 'Procesado'
-                        'en curso' => 'secondary',   // Fondo gris/azul para estado 'en curso'
-                        default => 'secondary',         // Fondo rojo para otros estados
-                    };
-                })
-                ->searchable(),
-                Tables\Columns\TextColumn::make('clientes.nombre_comercio')->label('Cliente')
-                ->sortable(),
-                Tables\Columns\TextColumn::make('total_trx')
-                ->label('Total Venta')
-                ->formatStateUsing(function ($state) {
-                    // Divide por 100 si el valor original incluye centavos y luego formatea sin decimales
-                    $formattedValue = number_format($state, 0, '', '.');
-                    return $formattedValue . ' Gs';
-                })
+                    ->label('Fecha')
+                    ->sortable()
+                    ->formatStateUsing(
+                        fn($state) =>
+                        ucfirst(\Carbon\Carbon::parse($state)->translatedFormat('l d/m/Y - H:i'))
+                    ),
+                BadgeColumn::make('estado_transaccion')
+                    ->label('Estado')
+                    ->colors([
+                        'warning' => 'en curso',
+                        'success' => 'cerrado',
+                        'danger'  => 'Cancelado',
+                    ])
+                    ->formatStateUsing(fn($state) => ucfirst($state)),
+                TextColumn::make('numero_trx')
+                    ->label('TRX N°')
+                    ->sortable()
+                    ->searchable(),
+
+                TextColumn::make('cajas.numero_caja')
+                    ->label('Caja N°')
+                    ->sortable()
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('metodo_pago')
+                    ->label('Método de Pago')
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => ucfirst($state)),
+
+                TextColumn::make('clientes.nombre_comercio')
+                    ->label('Cliente')
+                    ->sortable(),
+
+                    TextColumn::make('total_venta_final')
+                    ->label('Total Venta')
+                    ->formatStateUsing(function ($state, $record) {
+                        $monto = $record->total_con_descuento ?? $record->total_trx;
+                        return number_format($monto, 0, '', '.') . ' Gs';
+                    })
+                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
@@ -305,48 +366,44 @@ class TransaccionesResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
-                ->visible(fn ($record) => $record->estado_transaccion === 'en curso'),
+                    ->visible(fn($record) => $record->estado_transaccion === 'en curso'),
+
                 Tables\Actions\Action::make('pdf')
-                ->label('Imprimir')
-                ->color('success')
-                ->icon('heroicon-s-printer')
-                ->action(function (Transacciones $record) {
-                    // Cargar la relación 'productos' y la relación 'producto' dentro de 'productos'
-                    $record->load('productos.producto');
+                    ->label('Imprimir')
+                    ->color('success')
+                    ->icon('heroicon-s-printer')
+                    ->action(function (Transacciones $record) {
+                        $record->load('productos.producto');
 
-                    return response()->streamDownload(function () use ($record) {
-                        echo Pdf::loadHtml(
-                            Blade::render('transaccion', ['record' => $record])
-                        )
-                        ->setPaper([0, 0, 198.45, 340.2], 'portrait')  // Ancho 80 mm en puntos, ajusta la altura según el contenido
+                        return response()->streamDownload(function () use ($record) {
+                            echo Pdf::loadHtml(
+                                Blade::render('transaccion', ['record' => $record])
+                            )
+                                ->setPaper([0, 0, 198.45, 340.2], 'portrait')
+                                ->stream();
+                        }, $record->numero_trx . '.pdf');
+                    }),
 
-                        // Ajustar altura para más espacio vertical
-                        ->stream();
-                    }, $record->numero_trx . '.pdf');
-                }),
                 Tables\Actions\Action::make('cancelarTransaccion')
-                ->label('Cancelar')
-                ->icon('heroicon-o-x-circle')
-                ->color('danger') // Cambia el color del botón para resaltar la acción de cancelación
-                ->visible(fn ($record) => $record->estado_transaccion === 'en curso') // Visible solo si está en curso
-                ->requiresConfirmation() // Muestra una confirmación antes de ejecutar la acción
-                ->modalHeading('Cancelar Transacción')
-                ->modalSubheading('¿Estás seguro de que quieres cancelar esta transacción? Esta acción no se puede deshacer.')
-                ->modalButton('Sí, Cancelar')
-                ->action(function ($record) {
-                    // Cambiamos el estado a "Cancelado"
-                    $record->update([
-                        'estado_transaccion' => 'Cancelado',
-                    ]);
+                    ->label('Cancelar')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(
+                        fn($record) =>
+                        $record->estado_transaccion === 'en curso' &&
+                            auth()->user()->hasRole('super_admin')
+                    )
+                    ->requiresConfirmation()
+                    ->modalHeading('Cancelar Transacción')
+                    ->modalSubheading('¿Estás seguro de que quieres cancelar esta transacción? Esta acción no se puede deshacer.')
+                    ->modalButton('Sí, Cancelar')
+                    ->action(function ($record) {
+                        $record->update(['estado_transaccion' => 'Cancelado']);
 
-                    // Incrementamos el contador_cancelados en la tabla cajas
-                    $cajaId = $record->caja_id; // Asegúrate de que `caja_id` esté en el registro de la transacción
-                    if ($cajaId) {
-                        \App\Models\Cajas::where('id', $cajaId)->increment('contador_cancelados');
-                    }
-                })
-
-
+                        if ($record->caja_id) {
+                            \App\Models\Cajas::where('id', $record->caja_id)->increment('contador_cancelados');
+                        }
+                    })
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
@@ -354,7 +411,6 @@ class TransaccionesResource extends Resource
                 Tables\Actions\RestoreBulkAction::make(),
             ]);
     }
-
     public static function getRelations(): array
     {
         return [

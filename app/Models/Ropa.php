@@ -10,5 +10,24 @@ class Ropa extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['fecha', 'descripcion', 'precio', 'cobrado'];
+    protected $fillable = [
+        'fecha',
+        'descripcion',
+        'precio',
+        'unidades',
+        'creado_por',
+        'metodo_pago',
+        'caja_id',
+        'estado',
+    ];
+
+    public function creador()
+    {
+        return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    public function caja()
+    {
+        return $this->belongsTo(Cajas::class, 'caja_id');
+    }
 }

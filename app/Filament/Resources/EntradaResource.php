@@ -25,7 +25,7 @@ class EntradaResource extends Resource
     protected static ?string $model = Entrada::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
-
+    protected static ?string $navigationGroup = 'Administración';
     public static function form(Form $form): Form
     {
         return $form

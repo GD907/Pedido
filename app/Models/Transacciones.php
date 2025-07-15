@@ -9,7 +9,8 @@ class Transacciones extends Model
 {
     use HasFactory, SoftDeletes;
     protected $table = 'transacciones';
-    protected $fillable = ['caja_id', 'fecha',	'numero_trx', 'users_id',	'clientes_id',	'observacion',	'total_trx', 'estado_transaccion'];
+    protected $fillable = ['caja_id', 'fecha',	'numero_trx', 'users_id',	'clientes_id',	'observacion',	'total_trx', 'estado_transaccion' , 'metodo_pago',  'porcentaje_descuento',
+    'total_con_descuento',        ];
 
     public function users()
     {

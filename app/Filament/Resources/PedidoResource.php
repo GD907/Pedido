@@ -26,14 +26,15 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Hidden;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Tables\Columns\BadgeColumn;
 use Illuminate\Support\Facades\Blade;
-
+use App\Models\{Cajas, Repartos};
 class PedidoResource extends Resource
 {
     protected static ?string $model = Pedido::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
-
+    protected static ?string $navigationGroup = 'Ventas';
     public static function form(Form $form): Form
     {
         return $form
@@ -69,7 +70,48 @@ class PedidoResource extends Resource
                             ->columnSpan([
                                 'md' => 3,
                             ]),
+                            Select::make('cobrado_por')
+                            ->label('Cobrado por')
+                            ->options([
+                                'caja' => 'Caja',
+                                'reparto' => 'Reparto',
+                            ])
+                            ->default('caja')
+                            ->required()
+                            ->reactive(), // <- importante para que condicione lo siguiente
 
+                            Select::make('caja_id')
+                            ->label('Caja')
+                            ->options(fn () => \App\Models\Cajas::where('estado', 'abierto')
+                                ->where('users_id', auth()->id())
+                                ->pluck('numero_caja', 'id'))
+                            ->default(fn () => \App\Models\Cajas::where('estado', 'abierto')
+                                ->where('users_id', auth()->id())
+                                ->pluck('id')
+                                ->first())
+                            ->searchable()
+                            ->visible(fn ($get) => $get('cobrado_por') === 'caja')
+                            ->preload()
+                            ->placeholder('Seleccione una caja'),
+
+                            Select::make('reparto_id')
+                            ->label('Reparto asignado')
+                            ->options(fn () => \App\Models\Repartos::pluck('zona', 'id'))
+                            ->default(fn () => \App\Models\Repartos::pluck('id')->first())
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn ($get) => $get('cobrado_por') === 'reparto')
+                            ->placeholder('Seleccione un reparto'),
+                            Select::make('metodo_pago')
+    ->label('Método de Pago')
+    ->options([
+        'efectivo' => 'Efectivo',
+        'transferencia' => 'Transferencia',
+        'tarjeta' => 'Tarjeta',
+    ])
+    ->default('efectivo')
+    ->required()
+    ->columnSpan(1),
                         Hidden::make('total_venta') //Quiero guardar en este la suma de todas las ventas
                             ->reactive(),
                         // ->hidden(),
@@ -193,6 +235,16 @@ class PedidoResource extends Resource
                                         3 => '3%',
                                         4 => '4%',
                                         5 => '5%',
+                                        6 => '6%',
+                                        7 => '7%',
+                                        8 => '8%',
+                                        9 => '9%',
+                                        10 => '10%',
+                                        11 => '11%',
+                                        12 => '12%',
+                                        13 => '13%',
+                                        14 => '14%',
+                                        15 => '15%',
                                         100 => '100 %',
                                     ])
                                     ->afterStateUpdated(fn($state, callable $set, callable $get) =>
@@ -244,116 +296,120 @@ class PedidoResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-        ->defaultSort('fecha', 'desc') // Ordena por la columna de fecha en orden descendente
-            ->columns([
-                Tables\Columns\TextColumn::make('numero_factura')
-                    ->label('N°')
-                    ->searchable(),
-                    Tables\Columns\TextColumn::make('estado_pedido')
-                    ->searchable()
-                    ->sortable()
-                    ->label('Estado')
-                    ->color(function ($record) {
-                        return match ($record->estado_pedido) {
-                            'Pendiente' => 'secondary', // Fondo amarillo para estado 1
-                            'Cancelado' => 'danger',  // Fondo rojo para estado 2
-                            'Entregado' => 'success', // Fondo verde para estado 3
-                            default => 'secondary', // Otro color para otros estados
-                        };
-                    }),
+{
+    return $table
+        ->defaultSort('fecha', 'desc')
+        ->columns([
+            BadgeColumn::make('estado_pedido')
+            ->label('Estado')
+            ->searchable()
+            ->sortable()
+            ->color(fn ($state) => match (strtolower($state)) {
+                'pendiente' => 'secondary',
+                'cancelado' => 'danger',
+                'entregado', 'cerrado' => 'success',
+                default => 'secondary',
+            })
+            ->formatStateUsing(fn ($state) => ucfirst(strtolower($state))),
 
-                Tables\Columns\TextColumn::make('fecha')
-                    ->sortable()
-                    ->date()
-                    ->label('Fecha'),
-                Tables\Columns\TextColumn::make('clientes.nombre_comercio')
-                    ->searchable()
-                    ->sortable()
-                    ->label('Cliente'),
-                Tables\Columns\TextColumn::make('total_venta')->label('Total Venta')
-                ->formatStateUsing(function ($state) {
-                    // Divide por 100 si el valor original incluye centavos y luego formatea sin decimales
-                    $formattedValue = number_format($state, 0, '', '.');
-                    return $formattedValue . ' Gs';
-                })
-            ])
-            ->defaultSort('fecha', 'desc')
-            ->filters([
-                Tables\Filters\TrashedFilter::make(),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make()
-                ->visible(fn ($record) => $record->estado_pedido !== 'Cancelado'),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\Action::make('pdf')
-                    ->label('Imprimir')
-                    ->color('success')
-                    ->icon('heroicon-s-printer')
-                    ->action(function (Pedido $record) {
-                        // Cargar la relación 'pedidoDetalles' y la relación 'producto' dentro de 'pedidoDetalles'
+            Tables\Columns\TextColumn::make('fecha')
+                ->label('Fecha')
+                ->sortable()
+                ->formatStateUsing(fn ($state) =>
+                    ucfirst(\Carbon\Carbon::parse($state)->translatedFormat('l d/m/Y - H:i'))
+                ),
 
-                        $record->load('productos.producto');
-                        // dd($record->productos);
-                        return response()->streamDownload(function () use ($record) {
-                            echo Pdf::loadHtml(
-                                Blade::render('factura', ['record' => $record])
-                            ) ->setPaper([0, 0, 595.35, 340.2])
-                            ->stream();
-                        }, $record->numero_factura . '.pdf');
-                    }),
-                    Tables\Actions\Action::make('procesar_pedido')
-    ->label('Procesar')
-    ->color('primary')
-    ->icon('heroicon-s-save')
-    ->requiresConfirmation()
-    ->modalHeading('Confirmar entrega')
-    ->modalSubheading('¿Estás seguro de que este pedido ha sido entregado? Esta acción no se puede deshacer.')
-    ->modalButton('Sí, pedido entregado')
-    ->visible(fn ($record) => !in_array($record->estado_pedido, ['Cancelado', 'Entregado']))
-    ->action(function (Pedido $record) {
-        // Cambiar el estado del pedido a (procesado)
-        $record->update(['estado_pedido' => 'Entregado']);
+            Tables\Columns\TextColumn::make('clientes.nombre_comercio')
+                ->label('Cliente')
+                ->searchable()
+                ->sortable(),
 
-        // Cargar la relación de productos en pedidoDetalles
-        $record->load('productos.producto');
+                Tables\Columns\BadgeColumn::make('cobrado_por')
+                ->label('Cobrado por')
+                ->colors([
+                    'info' => 'caja',
+                    'secondary' => 'reparto',
+                ])
+                ->formatStateUsing(fn ($state) => ucfirst($state ?? 'No especificado')),
 
-        // Procesar el stock de cada producto
-        foreach ($record->productos as $detalle) {
-            $producto = $detalle->producto;
+                Tables\Columns\TextColumn::make('caja.numero_caja')
+                ->label('Caja N°')
+                ->sortable()
+                ->formatStateUsing(fn ($state, $record) =>
+                    ($record?->cobrado_por === 'caja') ? $state : '-'
+                ),
+                Tables\Columns\TextColumn::make('reparto.zona')
+                ->label('Zona de Reparto')
+                ->sortable()
+                ->searchable()
+                ->formatStateUsing(fn ($state, $record) =>
+                    $record?->cobrado_por === 'reparto' ? $state : '-'
+                ),
 
-            if ($producto) {
-                // Resta la cantidad vendida del stock actual
-                $producto->decrement('stock', $detalle->cantidad);
-            }
-        }
-    }),
-    Tables\Actions\Action::make('cancelar')
-    ->label('Cancelar')
-    ->color('danger')
-    ->icon('heroicon-s-x-circle')
-    // ->visible(fn ($record) => !in_array($record->estado_pedidos_id, [2, 3]))
-    ->requiresConfirmation()
-    ->modalHeading('Confirmar cancelación')
-    ->modalSubheading('¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.')
-    ->modalButton('Sí, cancelar pedido')
-    ->action(function (Pedido $record) {
-        $record->update(['estado_pedido' => 'Cancelado']);
+            Tables\Columns\TextColumn::make('total_venta')
+                ->label('Total Venta')
+                ->formatStateUsing(fn ($state) =>
+                    number_format($state, 0, '', '.') . ' Gs'
+                ),
+        ])
+        ->filters([
+            Tables\Filters\TrashedFilter::make(),
+        ])
+        ->actions([
+            Tables\Actions\ViewAction::make(),
 
-    })
+            Tables\Actions\EditAction::make()
+            ->visible(fn ($record) => !in_array($record->estado_pedido, ['Cancelado', 'cerrado'])),
+            Tables\Actions\Action::make('pdf')
+                ->label('Imprimir')
+                ->color('success')
+                ->icon('heroicon-s-printer')
+                ->action(function (Pedido $record) {
+                    $record->load('productos.producto');
 
+                    return response()->streamDownload(function () use ($record) {
+                        echo Pdf::loadHtml(
+                            Blade::render('factura', ['record' => $record])
+                        )->setPaper([0, 0, 595.35, 340.2])
+                         ->stream();
+                    }, $record->numero_factura . '.pdf');
+                }),
 
+            // Tables\Actions\Action::make('procesar_pedido')
+            //     ->label('Procesar')
+            //     ->color('primary')
+            //     ->icon('heroicon-s-save')
+            //     ->requiresConfirmation()
+            //     ->modalHeading('Confirmar entrega')
+            //     ->modalSubheading('¿Estás seguro de que este pedido ha sido entregado? Esta acción no se puede deshacer.')
+            //     ->modalButton('Sí, pedido entregado')
+            //     ->visible(fn ($record) => !in_array($record->estado_pedido, ['Cancelado', 'Entregado']))
+            //     ->action(function (Pedido $record) {
+            //         $record->update(['estado_pedido' => 'Entregado']);
+            //         $record->load('productos.producto');
+            //         foreach ($record->productos as $detalle) {
+            //             $detalle->producto?->decrement('stock', $detalle->cantidad);
+            //         }
+            //     }),
 
-            ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-                Tables\Actions\ForceDeleteBulkAction::make(),
-                Tables\Actions\RestoreBulkAction::make(),
-                FilamentExportBulkAction::make('export')
-            ]);
-    }
+                Tables\Actions\Action::make('cancelar')
+                ->label('Cancelar')
+                ->color('danger')
+                ->icon('heroicon-s-x-circle')
+                ->requiresConfirmation()
+                ->modalHeading('Confirmar cancelación')
+                ->modalSubheading('¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.')
+                ->modalButton('Sí, cancelar pedido')
+                ->visible(fn ($record) => $record->estado_pedido !== 'Cancelado' && $record->estado_pedido !== 'Entregado' && $record->estado_pedido !== 'cerrado')
+                ->action(fn (Pedido $record) =>
+                    $record->update(['estado_pedido' => 'Cancelado'])
+                ),
+        ])
+        ->bulkActions([
+            Tables\Actions\RestoreBulkAction::make(),
+            FilamentExportBulkAction::make('export'),
+        ]);
+}
 
     public static function getRelations(): array
     {

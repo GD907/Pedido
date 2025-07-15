@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\RopaResource\Pages;
+namespace App\Filament\Resources\CierreDiaResource\Pages;
 
-use App\Filament\Resources\RopaResource;
+use App\Filament\Resources\CierreDiaResource;
 use Filament\Pages\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditRopa extends EditRecord
+class EditCierreDia extends EditRecord
 {
-    protected static string $resource = RopaResource::class;
+    protected static string $resource = CierreDiaResource::class;
 
     protected function getActions(): array
     {

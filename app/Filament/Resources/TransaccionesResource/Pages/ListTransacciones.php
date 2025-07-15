@@ -10,10 +10,11 @@ class ListTransacciones extends ListRecords
 {
     protected static string $resource = TransaccionesResource::class;
 
-    protected function getActions(): array
+  protected function getActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->label('Crear Transacción'),
         ];
     }
 }

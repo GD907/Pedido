@@ -39,6 +39,7 @@
 <p>Fecha: {{ $record->fecha }}</p><br>
 <p>Cliente: {{ $record->clientes->nombre_comercio ?? ' ' }}</p><br>
 <p>Encargado: {{ $record->users->name ?? 'Sin encargado' }}</p><br>
+<p>Método de pago: {{ ucfirst($record->metodo_pago ?? 'efectivo') }}</p>
 <p>----------------------------------------</p><br>
 <p>Detalle </p><br>
 <p>----------------------------------------</p><br>
@@ -47,10 +48,13 @@
 <p>Cant: {{ $detalle->cantidad }}</p><br>
 <p class="text-right">Precio Unit: {{ number_format($detalle->precio, 0, ',', '.') }}</p><br>
 <p class="text-right">Subtotal: {{ number_format($detalle->subtotal, 0, ',', '.') }}</p><br>
-@endforeach
 <p>----------------------------------------</p><br>
+@endforeach
+
 <span class="text-right">Total: {{ number_format($record->total_trx, 0, ',', '.') }} Gs.  </span>
+@if(!is_null($record->total_con_descuento))
+    <span class="text-right">Total con descuento: {{ number_format($record->total_con_descuento, 0, ',', '.') }} Gs.</span><br>
+@endif
 <p>----------------------------------------</p><br>
 <p class="text-center">Ticket Sin Validez Fiscal</p><br>
-<p class="text-center">Gracias Por Su Compra</p><br>
 

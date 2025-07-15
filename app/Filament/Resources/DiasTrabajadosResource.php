@@ -26,7 +26,7 @@ class DiasTrabajadosResource extends Resource
     protected static ?string $model = DiasTrabajados::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-collection';
-
+    protected static ?string $navigationGroup = 'Administración';
     public static function form(Form $form): Form
     {
         return $form
