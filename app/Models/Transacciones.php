@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-class Transacciones extends Model
+use OwenIt\Auditing\Contracts\Auditable;
+class Transacciones extends Model implements Auditable
 {
     use HasFactory, SoftDeletes;
+    use \OwenIt\Auditing\Auditable;
     protected $table = 'transacciones';
     protected $fillable = ['caja_id', 'fecha',	'numero_trx', 'users_id',	'clientes_id',	'observacion',	'total_trx', 'estado_transaccion' , 'metodo_pago',  'porcentaje_descuento',
     'total_con_descuento',        ];

@@ -57,7 +57,9 @@ class CierreDiaResource extends Resource
                     // Select en una fila sola
                     Select::make('caja_id')
                         ->label('Caja Relacionada')
-                        ->options(\App\Models\Cajas::pluck('numero_caja', 'id'))
+                        ->options(
+                            \App\Models\Cajas::latest('created_at')->take(5)->pluck('numero_caja', 'id')
+                        )
                         ->searchable()
                         ->nullable()
                         ->reactive()

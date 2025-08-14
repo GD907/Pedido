@@ -60,8 +60,8 @@ class RopaResource extends Resource
                             ->first())
                         ->preload()
                         ->searchable()
-                        ->nullable()
-                        ->helperText('Solo se muestran cajas abiertas.')
+                        ->required()
+                        ->helperText('Seleccione una caja abierta para registrar la venta')
                         ->columnSpan(1),
 
                     // Segunda fila: descripción ocupa las 3 columnas

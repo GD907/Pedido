@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
-class CierreDia extends Model
+use OwenIt\Auditing\Contracts\Auditable;
+class CierreDia extends Model implements Auditable
 {
     use SoftDeletes, HasFactory;
-
+    use \OwenIt\Auditing\Auditable;
     protected $table = 'cierre_dias';
 
     protected $fillable = [

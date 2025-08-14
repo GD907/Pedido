@@ -79,7 +79,6 @@ class PedidoResource extends Resource
                             ->default('caja')
                             ->required()
                             ->reactive(), // <- importante para que condicione lo siguiente
-
                             Select::make('caja_id')
                             ->label('Caja')
                             ->options(fn () => \App\Models\Cajas::where('estado', 'abierto')
@@ -91,16 +90,21 @@ class PedidoResource extends Resource
                                 ->first())
                             ->searchable()
                             ->visible(fn ($get) => $get('cobrado_por') === 'caja')
+                            ->required(fn ($get) => $get('cobrado_por') === 'caja') // ✅ requerido si es "caja"
                             ->preload()
                             ->placeholder('Seleccione una caja'),
 
-                            Select::make('reparto_id')
+                        Select::make('reparto_id')
                             ->label('Reparto asignado')
-                            ->options(fn () => \App\Models\Repartos::pluck('zona', 'id'))
-                            ->default(fn () => \App\Models\Repartos::pluck('id')->first())
+                            ->options(fn () => \App\Models\Repartos::where('estado_reparto', 'pendiente')
+                                ->pluck('zona', 'id'))
+                            ->default(fn () => \App\Models\Repartos::where('estado_reparto', 'pendiente')
+                                ->pluck('id')
+                                ->first())
                             ->searchable()
                             ->preload()
                             ->visible(fn ($get) => $get('cobrado_por') === 'reparto')
+                            ->required(fn ($get) => $get('cobrado_por') === 'reparto') // ✅ requerido si es "reparto"
                             ->placeholder('Seleccione un reparto'),
                             Select::make('metodo_pago')
     ->label('Método de Pago')
@@ -267,6 +271,22 @@ class PedidoResource extends Resource
                                 // ->columnSpan([
                                 //     'md' => 2,
                                 // ]),
+                                Placeholder::make('mostrar_preciocompra')
+    ->label('Precio de Compra')
+    ->reactive()
+    ->content(function ($get) {
+        $productoId = $get('producto_id');
+
+        if (!$productoId) {
+            return 'Seleccione un producto';
+        }
+
+        $preciocompra = \App\Models\Producto::find($productoId)?->preciocompra ?? 0;
+
+        return number_format($preciocompra, 0, '.', '.') . ' Gs';
+    })
+    ->columnSpan(['md' => 2])
+    ->extraAttributes(['class' => 'text-blue-600 font-semibold']),
                                 Forms\Components\TextInput::make('subtotal')
                                     ->label('Subtotal (Gs)')
                                     ->disabled()
@@ -357,7 +377,8 @@ class PedidoResource extends Resource
         ])
         ->actions([
             Tables\Actions\ViewAction::make(),
-
+            Tables\Actions\DeleteAction::make()
+            ->visible(fn ($record) => $record->estado_pedido !== 'cerrado'),
             Tables\Actions\EditAction::make()
             ->visible(fn ($record) => !in_array($record->estado_pedido, ['Cancelado', 'cerrado'])),
             Tables\Actions\Action::make('pdf')

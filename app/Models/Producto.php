@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Notifications\NuevoProductoNotification;
 use Illuminate\Support\Facades\Notification;
-class Producto extends Model
+use OwenIt\Auditing\Contracts\Auditable;
+class Producto extends Model implements Auditable
 {
     use HasFactory, SoftDeletes;
+    use \OwenIt\Auditing\Auditable;
     protected $table = 'productos';
     public function categoria_productos()
     {

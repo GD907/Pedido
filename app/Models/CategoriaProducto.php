@@ -5,9 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-class CategoriaProducto extends Model
+use OwenIt\Auditing\Contracts\Auditable;
+class CategoriaProducto extends Model implements Auditable
 {
     use HasFactory, SoftDeletes;
+    use \OwenIt\Auditing\Auditable;
     protected $table = 'categoria_productos';
     protected $fillable = ['nombre', 'descripcion'];
     public function productos() {
