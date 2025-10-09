@@ -16,6 +16,8 @@ use Filament\Tables\Columns\{TextColumn, BadgeColumn};
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Blade;
 class RepartosResource extends Resource
 {
     protected static ?string $model = Repartos::class;
@@ -171,6 +173,20 @@ class RepartosResource extends Resource
                             'total_tarjeta' => $totales['tarjeta'],
                         ]);
                     }),
+                    Tables\Actions\Action::make('pdf')
+    ->label('Imprimir')
+    ->color('success')
+    ->icon('heroicon-s-printer')
+    ->action(function (Repartos $record) {
+        return response()->streamDownload(function () use ($record) {
+            echo Pdf::loadHtml(
+                Blade::render('RepartoPdF', ['record' => $record])
+            )
+            // Ticket de 80 mm (≈ 198.45 pt). Altura alta para evitar cortes.
+            ->setPaper([0, 0, 198.45, 1000], 'portrait')
+            ->stream();
+        }, 'Reparto_' . $record->id . '.pdf');
+    }),
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

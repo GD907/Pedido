@@ -29,6 +29,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Tables\Columns\BadgeColumn;
 use Illuminate\Support\Facades\Blade;
 use App\Models\{Cajas, Repartos};
+use Illuminate\Support\Facades\DB;
 class PedidoResource extends Resource
 {
     protected static ?string $model = Pedido::class;
@@ -412,19 +413,37 @@ class PedidoResource extends Resource
             //             $detalle->producto?->decrement('stock', $detalle->cantidad);
             //         }
             //     }),
+            Tables\Actions\Action::make('cancelar')
+            ->label('Cancelar')
+            ->color('danger')
+            ->icon('heroicon-s-x-circle')
+            ->requiresConfirmation()
+            ->modalHeading('Confirmar cancelación')
+            ->modalSubheading('¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.')
+            ->modalButton('Sí, cancelar pedido')
+            ->visible(fn ($record) =>
+                $record->estado_pedido !== 'Cancelado'
+                && $record->estado_pedido !== 'Entregado'
+                && $record->estado_pedido !== 'cerrado'
+            )
+            ->action(function (\App\Models\Pedido $record) {
+                // Solo restar si fue cobrado en caja y hay caja/monto válido
+                $monto = (int) ($record->total_venta ?? 0);
 
-                Tables\Actions\Action::make('cancelar')
-                ->label('Cancelar')
-                ->color('danger')
-                ->icon('heroicon-s-x-circle')
-                ->requiresConfirmation()
-                ->modalHeading('Confirmar cancelación')
-                ->modalSubheading('¿Estás seguro de que deseas cancelar este pedido? Esta acción no se puede deshacer.')
-                ->modalButton('Sí, cancelar pedido')
-                ->visible(fn ($record) => $record->estado_pedido !== 'Cancelado' && $record->estado_pedido !== 'Entregado' && $record->estado_pedido !== 'cerrado')
-                ->action(fn (Pedido $record) =>
-                    $record->update(['estado_pedido' => 'Cancelado'])
-                ),
+                if (
+                    ($record->cobrado_por ?? null) === 'caja'
+                    && !empty($record->caja_id)
+                    && $monto > 0
+                ) {
+                    \App\Models\Cajas::where('id', $record->caja_id)->update([
+                        // Evita que quede negativo
+                        'total_caja' => DB::raw('GREATEST(COALESCE(total_caja,0) - ' . $monto . ', 0)'),
+                    ]);
+                }
+
+                // Finalmente, marca el pedido como cancelado
+                $record->update(['estado_pedido' => 'Cancelado']);
+            }),
         ])
         ->bulkActions([
             Tables\Actions\RestoreBulkAction::make(),

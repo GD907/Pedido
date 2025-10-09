@@ -19,6 +19,7 @@ use Filament\Forms\Components\Section;
 use Filament\Tables\Columns\{TextColumn, BadgeColumn};
 use Filament\Tables\Columns\ToggleColumn;
 use AlperenErsoy\FilamentExport\Actions\FilamentExportBulkAction;
+use Illuminate\Support\Facades\DB;
 class RopaResource extends Resource
 {
     protected static ?string $model = Ropa::class;
@@ -152,22 +153,31 @@ public static function table(Table $table): Table
             Tables\Actions\ViewAction::make(),
             Tables\Actions\EditAction::make()
             ->visible(fn ($record) => $record->estado !== 'cerrado'),
-
-        Tables\Actions\DeleteAction::make()
-            ->visible(fn ($record) => $record->estado !== 'cerrado'),
+            Tables\Actions\DeleteAction::make(),
             Tables\Actions\Action::make('cancelar')
-    ->label('Cancelar')
-    ->icon('heroicon-o-x-circle')
-    ->color('danger')
-    ->requiresConfirmation()
-    ->modalHeading('¿Cancelar venta?')
-    ->modalSubheading('¿Estás seguro de cancelar esta venta de ropa? Esta acción no se puede deshacer.')
-    ->modalButton('Sí, cancelar')
-    ->action(fn ($record) => $record->update(['estado' => 'cancelado']))
-    ->visible(fn ($record) =>
-    !in_array($record->estado, ['cancelado', 'cerrado']) &&
-    auth()->user()->hasRole('super_admin')
-)
+            ->label('Cancelar')
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->requiresConfirmation()
+            ->modalHeading('¿Cancelar venta?')
+            ->modalSubheading('¿Estás seguro de cancelar esta venta de ropa? Esta acción no se puede deshacer.')
+            ->modalButton('Sí, cancelar')
+            // ✔️ visible para cualquiera, excepto si ya está cancelado o cerrado
+            ->visible(fn ($record) => !in_array($record->estado, ['cancelado', 'cerrado']))
+            ->action(function (\App\Models\Ropa $record) {
+                // Restar de la caja solo si hay caja y monto válido
+                $monto = (int) ($record->precio ?? 0);
+
+                if (!empty($record->caja_id) && $monto > 0) {
+                    \App\Models\Cajas::where('id', $record->caja_id)->update([
+                        // Evitar negativos
+                        'total_caja' => DB::raw('GREATEST(COALESCE(total_caja,0) - ' . $monto . ', 0)'),
+                    ]);
+                }
+
+                // Marcar venta como cancelada
+                $record->update(['estado' => 'cancelado']);
+            })
         ])
         ->bulkActions([
             Tables\Actions\DeleteBulkAction::make(),

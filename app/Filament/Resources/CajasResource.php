@@ -164,14 +164,17 @@ class CajasResource extends Resource
                 ->searchable()
                 ->getStateUsing(fn ($record) => $record->estado === 'abierto' ? 'Abierto' : 'Cerrado')
                 ->color(fn ($record) => $record->estado === 'abierto' ? 'success' : 'danger'),
+                Tables\Columns\TextColumn::make('cantidad_trx')
+    ->label('Cantidad de Transacciones')
+    ->sortable()
+    ->alignCenter()
+    ->formatStateUsing(fn ($state) => $state ?? 0),
                 Tables\Columns\TextColumn::make('total_caja')
                 ->label('Total Recaudado')
                 ->sortable()
-                ->formatStateUsing(fn ($state, $record) =>
-                    $record?->estado === 'cerrado'
-                        ? number_format($state ?? 0, 0, '', '.') . ' Gs'
-                        : '-'
-            ),
+                ->formatStateUsing(fn ($state) =>
+                    number_format($state ?? 0, 0, '', '.') . ' Gs'
+                ),
 
 
             // Tables\Columns\TextColumn::make('fue_procesado')
@@ -197,6 +200,10 @@ class CajasResource extends Resource
                 ->color('danger')
                 ->action(function (Cajas $record) {
                     $cajaId = $record->id;
+                    $record->update([
+                        'cantidad_trx' => 0,
+                        'total_caja'   => 0,
+                    ]);
 
                     // --- Transacciones ---
                     $transacciones = \App\Models\Transacciones::where('caja_id', $cajaId)

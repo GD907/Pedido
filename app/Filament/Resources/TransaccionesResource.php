@@ -26,6 +26,7 @@ use Filament\Forms\Components\Section;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Blade;
 use Filament\Tables\Columns\{TextColumn, BadgeColumn};
+use Illuminate\Support\Facades\DB;
 
 class TransaccionesResource extends Resource
 {
@@ -384,24 +385,49 @@ class TransaccionesResource extends Resource
                         }, $record->numero_trx . '.pdf');
                     }),
 
-                Tables\Actions\Action::make('cancelarTransaccion')
+                    Tables\Actions\Action::make('cancelarTransaccion')
                     ->label('Cancelar')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->visible(
-                        fn($record) =>
-                        $record->estado_transaccion === 'en curso' &&
-                            auth()->user()->hasRole('super_admin')
+                        fn ($record) =>
+                        $record->estado_transaccion === 'en curso'
                     )
                     ->requiresConfirmation()
                     ->modalHeading('Cancelar Transacción')
                     ->modalSubheading('¿Estás seguro de que quieres cancelar esta transacción? Esta acción no se puede deshacer.')
                     ->modalButton('Sí, Cancelar')
-                    ->action(function ($record) {
+                    ->action(function (\App\Models\Transacciones $record) {
+                        // Calcula el monto a revertir ANTES de cambiar el estado
+                        $monto = (int) ($record->total_con_descuento ?? $record->total_trx ?? 0);
+
+                        // Marca la transacción como cancelada
                         $record->update(['estado_transaccion' => 'Cancelado']);
 
+                        // Actualiza contadores de la caja si aplica
                         if ($record->caja_id) {
+                            \App\Models\Cajas::where('id', $record->caja_id)->update([
+                                // evita negativos
+                                'cantidad_trx' => DB::raw('GREATEST(COALESCE(cantidad_trx,0) - 1, 0)'),
+                                'total_caja'   => DB::raw('GREATEST(COALESCE(total_caja,0) - ' . $monto . ', 0)'),
+                            ]);
+
+                            // Mantienes tu contador de cancelados
                             \App\Models\Cajas::where('id', $record->caja_id)->increment('contador_cancelados');
+
+                            /* (Opcional) Si además quieres revertir totales por método de pago, descomenta:
+                            $col = match ($record->metodo_pago) {
+                                'efectivo'      => 'total_trx_efectivo',
+                                'transferencia' => 'total_trx_transferencia',
+                                'tarjeta'       => 'total_trx_tarjeta',
+                                default         => null,
+                            };
+                            if ($col) {
+                                \App\Models\Cajas::where('id', $record->caja_id)->update([
+                                    $col => DB::raw('GREATEST(COALESCE(' . $col . ',0) - ' . $monto . ', 0)'),
+                                ]);
+                            }
+                            */
                         }
                     })
             ])
